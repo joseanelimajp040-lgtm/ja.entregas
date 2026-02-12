@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>J.A Pet Shop - Sistema Integrado</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "primary-hover": "#0fd651",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-dark": "#162e1e", // Original Login color
+                        "surface-card": "#1a2e22", // Dashboard card color
+                        "surface-variant": "#243c2c",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(19, 236, 91, 0.3)',
+                        'glow-strong': '0 0 20px rgba(19, 236, 91, 0.15)',
+                    }
+                },
+            },
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Manrope', sans-serif; overflow: hidden; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #243c2c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #13ec5b; }
+
+        /* Input Animations (Login) */
+        .md3-input-container { position: relative; }
+        .md3-input { transition: all 0.2s ease; }
+        .md3-label {
+            position: absolute; left: 3rem; top: 50%; transform: translateY(-50%);
+            transition: all 0.2s ease; pointer-events: none; color: #9ca3af;
+        }
+        .md3-input:focus ~ .md3-label, .md3-input:not(:placeholder-shown) ~ .md3-label {
+            top: 0.5rem; font-size: 0.75rem; color: #13ec5b;
+        }
+        .md3-input:focus, .md3-input:not(:placeholder-shown) { padding-top: 1.5rem; padding-bottom: 0.5rem; }
+
+        /* Background Pattern (Login) */
+        .bg-pattern {
+            background-color: #102216;
+            background-image: radial-gradient(#13ec5b 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            opacity: 0.4;
+        }
+
+        /* Modal Focus States */
+        .modal-input:focus-within label { color: #13ec5b; }
+        .modal-input:focus-within { border-color: #13ec5b; border-width: 2px; }
+
+        /* SPA Transitions */
+        .view-section {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            opacity: 0; pointer-events: none; transform: scale(0.98); z-index: 0;
+        }
+        .view-section.active {
+            opacity: 1; pointer-events: auto; transform: scale(1); z-index: 10;
+        }
+        
+        /* Modal Transitions */
+        #modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        #modal-card {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+        .modal-hidden #modal-card {
+            transform: scale(0.9) translateY(20px); opacity: 0;
+        }
+        .modal-hidden {
+            pointer-events: none; opacity: 0;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid rgba(19, 236, 91, 0.1);
+            border-left-color: #13ec5b;
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen relative overflow-hidden">
+
+    <section id="view-login" class="view-section active flex items-center justify-center">
+        <div class="absolute inset-0 bg-pattern opacity-20 pointer-events-none z-0"></div>
+        <div class="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-primary/5 blur-[100px] pointer-events-none z-0"></div>
+
+        <main class="relative z-10 w-full max-w-md px-6">
+            <div class="bg-white dark:bg-surface-dark/90 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-lg shadow-2xl overflow-hidden p-8 md:p-10 transform transition-all hover:shadow-glow">
+                <div class="text-center mb-10">
+                    <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
+                        <span class="material-icons-round text-3xl">pets</span>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">Olá, balconista</h1>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm md:text-base">Bem-vindo ao sistema da J.A Pet Shop</p>
+                </div>
+
+                <form id="login-form" class="space-y-6" onsubmit="handleLogin(event)">
+                    <div class="md3-input-container group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-icons-round text-gray-400 group-focus-within:text-primary transition-colors">person</span>
+                        </div>
+                        <input class="md3-input w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/20 border border-gray-300 dark:border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-transparent" id="username" name="username" placeholder=" " type="text" value="admin" />
+                        <label class="md3-label cursor-text" for="username">Usuário</label>
+                    </div>
+
+                    <div class="md3-input-container group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-icons-round text-gray-400 group-focus-within:text-primary transition-colors">lock</span>
+                        </div>
+                        <input class="md3-input w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-black/20 border border-gray-300 dark:border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-transparent" id="password" name="password" placeholder=" " type="password" value="123" />
+                        <label class="md3-label cursor-text" for="password">Senha</label>
+                        <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors focus:outline-none" type="button" onclick="togglePassword()">
+                            <span class="material-icons-round">visibility</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm pt-2">
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input class="form-checkbox h-4 w-4 text-primary rounded border-gray-300 dark:border-gray-600 dark:bg-black/30 focus:ring-primary/50" type="checkbox" />
+                            <span class="text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors">Lembrar-me</span>
+                        </label>
+                        <a class="text-primary hover:text-primary-hover font-medium transition-colors hover:underline decoration-2 underline-offset-4" href="#">Esqueceu a senha?</a>
+                    </div>
+
+                    <button id="btn-login" class="w-full bg-primary hover:bg-primary-hover text-background-dark font-bold py-4 px-6 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center space-x-2 mt-4 group" type="submit">
+                        <span id="login-text">Entrar</span>
+                        <div id="login-loader" class="loader hidden"></div>
+                        <span id="login-icon" class="material-icons-round text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </button>
+                </form>
+
+                <div class="mt-8 text-center">
+                    <p class="text-xs text-gray-400 dark:text-gray-500">© 2023 J.A Pet Shop Delivery System v1.0</p>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <section id="view-dashboard" class="view-section flex flex-row">
+        <aside class="w-24 lg:w-72 flex-shrink-0 bg-white dark:bg-surface-card border-r border-gray-200 dark:border-primary/10 flex flex-col justify-between py-8 px-4 transition-all duration-300 z-20 h-full">
+            <div>
+                <div class="flex items-center gap-4 px-2 mb-12">
+                    <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-glow-strong">
+                        <span class="material-icons-round text-background-dark text-3xl">pets</span>
+                    </div>
+                    <div class="hidden lg:block">
+                        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">J.A Pet Shop</h1>
+                        <span class="text-xs text-slate-500 dark:text-primary/70 font-medium">Delivery Manager</span>
+                    </div>
+                </div>
+                <nav class="space-y-2">
+                    <a class="flex items-center gap-4 px-4 py-4 rounded-full bg-primary/20 text-primary-900 dark:text-primary font-bold transition-all duration-200 group" href="#">
+                        <span class="material-icons-round text-2xl">dashboard</span>
+                        <span class="hidden lg:block">Painel</span>
+                    </a>
+                    <a class="flex items-center gap-4 px-4 py-4 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-variant hover:text-slate-900 dark:hover:text-white transition-all duration-200 group" href="#">
+                        <span class="material-icons-round text-2xl">history</span>
+                        <span class="hidden lg:block">Histórico</span>
+                    </a>
+                    <a class="flex items-center gap-4 px-4 py-4 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-variant hover:text-slate-900 dark:hover:text-white transition-all duration-200 group" href="#">
+                        <span class="material-icons-round text-2xl">local_shipping</span>
+                        <span class="hidden lg:block">Entregadores</span>
+                    </a>
+                </nav>
+            </div>
+            <div>
+                <a class="flex items-center gap-4 px-4 py-4 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-variant hover:text-slate-900 dark:hover:text-white transition-all duration-200" href="#">
+                    <span class="material-icons-round text-2xl">settings</span>
+                    <span class="hidden lg:block">Configurações</span>
+                </a>
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-primary/10 flex items-center gap-3 px-2 cursor-pointer" onclick="handleLogout()">
+                    <div class="relative">
+                        <img alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary" src="https://ui-avatars.com/api/?name=Joao+Silva&background=13ec5b&color=102216" />
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-primary border-2 border-white dark:border-surface-card rounded-full"></span>
+                    </div>
+                    <div class="hidden lg:block overflow-hidden">
+                        <p class="text-sm font-bold text-slate-900 dark:text-white truncate">João Silva</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate">Sair</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto relative scroll-smooth p-6 lg:p-10">
+            <header class="flex justify-between items-center mb-10">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-1">Resumo do Dia</h2>
+                    <p class="text-slate-500 dark:text-slate-400 capitalize" id="current-date">Terça-feira, 24 de Outubro</p>
+                </div>
+                <div class="flex gap-4">
+                    <button class="w-12 h-12 rounded-full bg-white dark:bg-surface-card flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-variant transition-colors shadow-sm">
+                        <span class="material-icons-round">notifications</span>
+                    </button>
+                    <button class="w-12 h-12 rounded-full bg-white dark:bg-surface-card flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-variant transition-colors shadow-sm">
+                        <span class="material-icons-round">search</span>
+                    </button>
+                </div>
+            </header>
+
+            <section class="mb-12 flex justify-center">
+                <div class="relative w-80 h-80 lg:w-96 lg:h-96 flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full border-[20px] border-slate-200 dark:border-surface-card"></div>
+                    <svg class="absolute inset-0 w-full h-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(19,236,91,0.4)]">
+                        <circle cx="50%" cy="50%" fill="transparent" r="44%" stroke="#13ec5b" stroke-dasharray="880" stroke-dashoffset="220" stroke-linecap="round" stroke-width="20"></circle>
+                    </svg>
+                    <div class="text-center z-10 flex flex-col items-center">
+                        <span class="material-icons-round text-primary text-4xl mb-2">payments</span>
+                        <h3 class="text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tighter mb-2">
+                            <span class="text-2xl lg:text-3xl align-top text-slate-500 dark:text-slate-400 font-medium mr-1">R$</span><span id="total-value">0,00</span>
+                        </h3>
+                        <p class="text-sm uppercase tracking-widest font-bold text-slate-500 dark:text-primary/80">Valor Total Vendido</p>
+                        <div class="mt-4 py-1 px-3 bg-primary/10 rounded-full border border-primary/20">
+                            <span class="text-xs font-bold text-primary flex items-center gap-1">
+                                <span class="material-icons-round text-sm">trending_up</span> +12% vs ontem
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white dark:bg-surface-card p-6 rounded-[2rem] flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <span class="material-icons-round text-2xl">inventory_2</span>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white" id="count-total">0</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Pedidos Totais</p>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-surface-card p-6 rounded-[2rem] flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                        <span class="material-icons-round text-2xl">local_shipping</span>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white" id="count-route">0</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Em Rota</p>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-surface-card p-6 rounded-[2rem] flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary-dark dark:text-primary">
+                        <span class="material-icons-round text-2xl">check_circle</span>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white" id="count-delivered">0</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Entregues</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white dark:bg-surface-card rounded-[2.5rem] p-6 lg:p-8 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">Entregas Recentes</h3>
+                    <a class="text-sm font-bold text-primary hover:text-green-400 transition-colors" href="#">Ver todas</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-separate border-spacing-y-3">
+                        <thead>
+                            <tr class="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <th class="pb-2 pl-4">ID Pedido</th>
+                                <th class="pb-2">Cliente</th>
+                                <th class="pb-2 hidden md:table-cell">Endereço/Região</th>
+                                <th class="pb-2">Status</th>
+                                <th class="pb-2 text-right pr-4">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-700 dark:text-slate-200" id="deliveries-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <button onclick="toggleModal(true)" class="fixed bottom-8 right-8 w-16 h-16 bg-primary hover:bg-[#0fdc53] active:scale-95 text-background-dark rounded-2xl shadow-[0_8px_30px_rgba(19,236,91,0.4)] flex items-center justify-center transition-all duration-300 z-50 group">
+                <span class="material-icons-round text-4xl group-hover:rotate-90 transition-transform duration-300">add</span>
+                <span class="absolute right-full mr-4 bg-surface-card text-white text-xs font-bold py-2 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg border border-primary/20 pointer-events-none">Nova Entrega</span>
+            </button>
+        </main>
+    </section>
+
+    <div id="modal-overlay" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm modal-hidden">
+        <div id="modal-card" class="relative w-full max-w-4xl bg-white dark:bg-surface-dark rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-white/5">
+            <div class="px-8 py-6 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-surface-variant/30">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Nova Entrega</h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Preencha os dados do pedido para despacho.</p>
+                </div>
+                <button onclick="toggleModal(false)" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-400">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            
+            <div class="p-8">
+                <form id="delivery-form" class="grid grid-cols-12 gap-6" onsubmit="saveDelivery(event)">
+                    <div class="col-span-12 mb-2">
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 ml-1 uppercase tracking-wider">Região da Entrega</label>
+                        <div class="flex p-1 bg-gray-100 dark:bg-black/40 rounded-full w-full sm:w-fit">
+                            <label class="flex-1 sm:flex-none cursor-pointer">
+                                <input checked class="peer sr-only" name="zone" type="radio" value="Geisel" />
+                                <div class="px-6 py-2 rounded-full text-center text-sm font-medium transition-all duration-200 peer-checked:bg-primary peer-checked:text-black peer-checked:shadow-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Entrega Geisel</div>
+                            </label>
+                            <label class="flex-1 sm:flex-none cursor-pointer">
+                                <input class="peer sr-only" name="zone" type="radio" value="Valentina" />
+                                <div class="px-6 py-2 rounded-full text-center text-sm font-medium transition-all duration-200 peer-checked:bg-primary peer-checked:text-black peer-checked:shadow-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Entrega Valentina</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-7">
+                        <div class="modal-input relative border border-gray-300 dark:border-white/20 rounded-lg px-4 py-2 transition-colors hover:border-gray-400 dark:hover:border-white/40 bg-transparent group">
+                            <label class="absolute -top-2.5 left-3 bg-white dark:bg-surface-dark px-1 text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors" for="clientName">Nome do Cliente</label>
+                            <input class="w-full bg-transparent border-none p-0 text-gray-900 dark:text-white placeholder-transparent focus:ring-0 sm:text-base sm:leading-6 h-8" id="clientName" placeholder="Nome Completo" type="text" required />
+                        </div>
+                    </div>
+                    <div class="col-span-12 md:col-span-5">
+                        <div class="modal-input relative border border-gray-300 dark:border-white/20 rounded-lg px-4 py-2 transition-colors hover:border-gray-400 dark:hover:border-white/40 bg-transparent group flex items-center">
+                            <label class="absolute -top-2.5 left-3 bg-white dark:bg-surface-dark px-1 text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors" for="phone">Telefone</label>
+                            <span class="material-icons-round text-gray-400 text-lg mr-2">phone</span>
+                            <input class="w-full bg-transparent border-none p-0 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-0 sm:text-base sm:leading-6 h-8" id="phone" placeholder="(83) 99999-9999" type="tel" required />
+                        </div>
+                    </div>
+
+                    <div class="col-span-12">
+                        <div class="modal-input relative border border-gray-300 dark:border-white/20 rounded-lg px-4 py-3 transition-colors hover:border-gray-400 dark:hover:border-white/40 bg-transparent group">
+                            <label class="absolute -top-2.5 left-3 bg-white dark:bg-surface-dark px-1 text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors" for="description">Descrição do Pedido</label>
+                            <textarea class="w-full bg-transparent border-none p-0 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-0 sm:text-base sm:leading-6 resize-none" id="description" placeholder="Liste os produtos, quantidades e observações especiais..." rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-4">
+                        <div class="modal-input relative border border-gray-300 dark:border-white/20 rounded-lg px-4 py-2 transition-colors hover:border-gray-400 dark:hover:border-white/40 bg-transparent group flex items-center">
+                            <label class="absolute -top-2.5 left-3 bg-white dark:bg-surface-dark px-1 text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors" for="value">Valor da Entrega</label>
+                            <span class="text-gray-500 dark:text-gray-400 mr-1 font-medium">R$</span>
+                            <input class="w-full bg-transparent border-none p-0 text-gray-900 dark:text-white placeholder-transparent focus:ring-0 sm:text-base sm:leading-6 h-8 text-right font-mono" id="value" placeholder="0,00" step="0.01" type="number" required />
+                        </div>
+                    </div>
+                    <div class="col-span-12 md:col-span-8 flex flex-col justify-center">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 ml-1">Método de Pagamento</span>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="cursor-pointer group">
+                                <input checked class="peer sr-only" name="payment" type="radio" value="Pix" />
+                                <div class="pl-2 pr-4 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary flex items-center gap-2 transition-all hover:bg-gray-50 dark:hover:bg-white/5">
+                                    <span class="material-icons-round text-lg">pix</span>
+                                    <span class="text-sm font-medium">Pix</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer group">
+                                <input class="peer sr-only" name="payment" type="radio" value="Dinheiro" />
+                                <div class="pl-2 pr-4 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary flex items-center gap-2 transition-all hover:bg-gray-50 dark:hover:bg-white/5">
+                                    <span class="material-icons-round text-lg">payments</span>
+                                    <span class="text-sm font-medium">Dinheiro</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer group">
+                                <input class="peer sr-only" name="payment" type="radio" value="Crédito" />
+                                <div class="pl-2 pr-4 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary flex items-center gap-2 transition-all hover:bg-gray-50 dark:hover:bg-white/5">
+                                    <span class="material-icons-round text-lg">credit_card</span>
+                                    <span class="text-sm font-medium">Crédito</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer group">
+                                <input class="peer sr-only" name="payment" type="radio" value="Débito" />
+                                <div class="pl-2 pr-4 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary flex items-center gap-2 transition-all hover:bg-gray-50 dark:hover:bg-white/5">
+                                    <span class="material-icons-round text-lg">credit_score</span>
+                                    <span class="text-sm font-medium">Débito</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-span-12 mt-2">
+                        <label class="block w-full cursor-pointer group">
+                            <input class="sr-only" type="file" />
+                            <div class="border-2 border-dashed border-gray-300 dark:border-white/20 rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all group-hover:border-primary group-hover:bg-primary/5">
+                                <div class="bg-gray-100 dark:bg-white/10 p-3 rounded-full mb-3 group-hover:bg-primary/20 transition-colors">
+                                    <span class="material-icons-round text-gray-500 dark:text-gray-300 text-2xl group-hover:text-primary">upload_file</span>
+                                </div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Anexar Foto da Nota Fiscal</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG até 5MB</p>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="col-span-12 pt-4 flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 border-t border-gray-100 dark:border-white/5 -mx-8 px-8 -mb-2">
+                        <button type="button" onclick="toggleModal(false)" class="px-6 py-2.5 rounded-full text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancelar</button>
+                        <button type="submit" class="px-6 py-2.5 rounded-full text-sm font-bold bg-primary text-black hover:bg-[#0fdc53] shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                            <span class="material-icons-round text-lg">check</span> Salvar Entrega
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="h-1 w-full bg-gradient-to-r from-primary/50 via-primary to-primary/50"></div>
+            
+            <div class="absolute -z-10 top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] pointer-events-none opacity-50 dark:opacity-20"></div>
+            <div class="absolute -z-10 bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none opacity-50 dark:opacity-20"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        const MOCK_DATA = [
+            { id: "JA-2045", name: "Ana Silva", address: "Rua das Flores, 123 - Centro", status: "Em Rota", value: 150.00 },
+            { id: "JA-2044", name: "Carlos Oliveira", address: "Av. Brasil, 450 - Jd. América", status: "Entregue", value: 89.90 },
+            { id: "JA-2043", name: "Mariana Lima", address: "Rua Pará, 88 - Vila Nova", status: "Entregue", value: 210.50 },
+            { id: "JA-2042", name: "Roberto Barros", address: "Cond. Solar, Bloco C - Apt 42", status: "Pendente", value: 45.00 }
+        ];
+
+        let deliveries = JSON.parse(localStorage.getItem('ja_deliveries')) || MOCK_DATA;
+
+        // --- UTILS ---
+        const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+        
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+        }
+
+        function getColorByStatus(status) {
+            switch(status) {
+                case 'Em Rota': return { bg: 'bg-orange-100 dark:bg-orange-900/40', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' };
+                case 'Entregue': return { bg: 'bg-primary/20', text: 'text-green-800 dark:text-green-200', border: 'border-primary/30' };
+                default: return { bg: 'bg-slate-200 dark:bg-slate-700', text: 'text-slate-700 dark:text-slate-300', border: 'border-slate-300 dark:border-slate-600' };
+            }
+        }
+
+        function getColorByName(name) {
+            const colors = ['purple', 'blue', 'pink', 'yellow', 'indigo', 'red'];
+            const index = name.length % colors.length;
+            const color = colors[index];
+            return {
+                bg: `bg-${color}-100 dark:bg-${color}-900/40`,
+                text: `text-${color}-600 dark:text-${color}-300`
+            };
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        function updateDashboard() {
+            // Update Date
+            const dateOpts = { weekday: 'long', day: 'numeric', month: 'long' };
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR', dateOpts);
+
+            // Calculate KPIs
+            const totalValue = deliveries.reduce((acc, curr) => acc + curr.value, 0);
+            const totalCount = deliveries.length;
+            const inRouteCount = deliveries.filter(d => d.status === 'Em Rota').length;
+            const deliveredCount = deliveries.filter(d => d.status === 'Entregue').length;
+
+            document.getElementById('total-value').innerText = formatCurrency(totalValue).replace('R$', '').trim();
+            document.getElementById('count-total').innerText = totalCount;
+            document.getElementById('count-route').innerText = inRouteCount;
+            document.getElementById('count-delivered').innerText = deliveredCount;
+
+            // Render Table
+            const tbody = document.getElementById('deliveries-table-body');
+            tbody.innerHTML = '';
+
+            deliveries.forEach(item => {
+                const statusColor = getColorByStatus(item.status);
+                const avatarColor = getColorByName(item.name);
+                
+                const tr = document.createElement('tr');
+                tr.className = "group hover:bg-slate-50 dark:hover:bg-surface-variant transition-colors rounded-xl animate-fade-in";
+                tr.innerHTML = `
+                    <td class="py-4 pl-4 rounded-l-2xl font-mono text-sm">${item.id}</td>
+                    <td class="py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full ${avatarColor.bg} flex items-center justify-center ${avatarColor.text} text-xs font-bold">
+                                ${getInitials(item.name)}
+                            </div>
+                            <span class="font-bold">${item.name}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 text-sm text-slate-500 dark:text-slate-400 hidden md:table-cell">${item.address}</td>
+                    <td class="py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor.bg} ${statusColor.text} border ${statusColor.border}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="py-4 text-right font-bold pr-4 rounded-r-2xl">${formatCurrency(item.value)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- EVENT HANDLERS ---
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            const txt = document.getElementById('login-text');
+            const loader = document.getElementById('login-loader');
+            const icon = document.getElementById('login-icon');
+
+            // Simulate loading
+            txt.classList.add('hidden');
+            icon.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            setTimeout(() => {
+                // Fade out login
+                document.getElementById('view-login').classList.remove('active');
+                
+                // Fade in dashboard
+                document.getElementById('view-dashboard').classList.add('active');
+                
+                // Initialize Dashboard
+                updateDashboard();
+
+                // Reset button for logout later
+                txt.classList.remove('hidden');
+                icon.classList.remove('hidden');
+                loader.classList.add('hidden');
+            }, 1000);
+        }
+
+        function handleLogout() {
+            document.getElementById('view-dashboard').classList.remove('active');
+            document.getElementById('view-login').classList.add('active');
+        }
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // --- MODAL LOGIC ---
+        function toggleModal(show) {
+            const overlay = document.getElementById('modal-overlay');
+            if(show) {
+                overlay.classList.remove('modal-hidden');
+            } else {
+                overlay.classList.add('modal-hidden');
+                // Optional: Clear form
+                setTimeout(() => document.getElementById('delivery-form').reset(), 300);
+            }
+        }
+
+        function saveDelivery(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const zone = formData.get('zone'); // "Entrega Geisel" or "Valentina" logic
+            const status = zone === 'Geisel' ? 'Em Rota' : 'Pendente'; // Simple logic for demo
+            
+            const newDelivery = {
+                id: `#JA-${Math.floor(2050 + Math.random() * 1000)}`,
+                name: document.getElementById('clientName').value,
+                address: zone === 'Geisel' ? 'Entrega Geisel' : 'Entrega Valentina',
+                status: 'Em Rota',
+                value: parseFloat(document.getElementById('value').value)
+            };
+
+            // Add to beginning of array
+            deliveries.unshift(newDelivery);
+            
+            // Save & Update
+            localStorage.setItem('ja_deliveries', JSON.stringify(deliveries));
+            updateDashboard();
+            
+            toggleModal(false);
+        }
+
+        // Initial setup for CSS View handling
+        document.addEventListener("DOMContentLoaded", () => {
+           // Ensure only Login is active initially
+           document.getElementById('view-login').classList.add('active');
+           document.getElementById('view-dashboard').classList.remove('active');
+        });
+
+    </script>
+</body>
+</html>
