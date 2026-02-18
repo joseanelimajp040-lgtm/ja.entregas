@@ -1,684 +1,603 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html class="dark" lang="pt-BR">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>J.A Pet Shop - Sistema de Gestão</title>
+    <title>J.A Pet Shop - Sistema Integrado</title>
+    
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-
-    <script id="tailwind-config">
+    <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#13ec5b",
-                        "primary-dark": "#0fb846",
-                        "primary-content": "#003b11",
-                        "primary-surface": "rgba(19, 236, 91, 0.1)",
-                        "background-light": "#f6f8f6",
-                        "background-dark": "#102216",
-                        "surface-light": "#ffffff",
-                        "surface-dark": "#1c3325",
-                        "surface-variant-light": "#e0e6e1",
-                        "surface-variant-dark": "#23402b",
-                        "on-surface-light": "#1a1c1a",
-                        "on-surface-dark": "#e0e3e0",
-                        "outline-light": "#747974",
-                        "outline-dark": "#8d938d",
+                        "primary": "#13ec6d",
+                        "primary-dark": "#0ea34e",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102218",
+                        "surface-dark": "#1c2e24", 
+                        "surface-darker": "#0d1f15",
                     },
                     fontFamily: {
-                        "display": ["Inter", "sans-serif"]
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
                     },
-                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
-                    boxShadow: {
-                        'md3': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-                        'md3-elevated': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                        'md3-1': '0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30)',
-                        'md3-level3': '0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3)',
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
                     },
-                    animation: {
-                        'fade-in': 'fadeIn 0.4s ease-out forwards',
-                        'slide-up': 'slideUp 0.4s ease-out forwards',
-                        'scale-in': 'scaleIn 0.2s ease-out forwards',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        scaleIn: {
-                            '0%': { opacity: '0', transform: 'scale(0.95)' },
-                            '100%': { opacity: '1', transform: 'scale(1)' },
-                        }
+                    backgroundImage: {
+                        'paw-pattern': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2313ec6d' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E\")",
                     }
                 },
             },
         }
     </script>
-
+    
     <style>
-        /* Estilos Globais */
-        body { overflow-x: hidden; }
-        
-        /* Scrollbar Customizada */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+        ::-webkit-scrollbar-track { background: #102218; }
+        ::-webkit-scrollbar-thumb { background: #1c2e24; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b5445; }
+
+        /* Animation Utilities */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.4s ease, transform 0.4s ease; }
+        .fade-exit { opacity: 1; transform: translateY(0); }
+        .fade-exit-active { opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; }
         
-        /* Inputs Login */
-        .peer:placeholder-shown ~ .floating-label { top: 50%; transform: translateY(-50%) scale(1); color: #747974; }
-        .peer:focus ~ .floating-label, .peer:not(:placeholder-shown) ~ .floating-label { top: 8px; transform: translateY(0) scale(0.75); }
-
-        /* --- NOVOS ESTILOS TELA DE ENTREGA --- */
-        /* Radio Card (Pagamento) */
-        .radio-card-input:checked + .radio-card-label {
-            border-color: theme('colors.primary');
-            background-color: theme('colors.primary-surface');
-            color: theme('colors.primary-content');
-        }
-        .radio-card-input:checked + .radio-card-label .material-icons-outlined {
-            color: theme('colors.primary-dark');
-            font-variation-settings: 'FILL' 1;
-        }
-
-        /* Seletor de Região (Estilo iOS/Segmented) */
-        .region-selector input:checked + label {
-            background-color: theme('colors.surface-light');
-            color: theme('colors.primary-dark');
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            font-weight: 600;
-        }
-        .dark .region-selector input:checked + label {
-            background-color: theme('colors.surface-variant-dark');
-            color: theme('colors.primary');
-        }
-
-        /* Navegação */
-        .view-section { display: none; width: 100%; min-height: 100vh; }
-        .view-section.active { display: flex; }
+        .hidden-visually { display: none !important; }
     </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-on-surface-light dark:text-white transition-colors duration-300">
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen text-slate-900 dark:text-white overflow-hidden selection:bg-primary/30 selection:text-white">
 
-    <section id="view-login" class="view-section items-center justify-center p-4 active">
-        <main class="w-full max-w-md animate-slide-up">
-            <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-md3-elevated p-8 md:p-10 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary/40 via-primary to-primary/40"></div>
-                <div class="text-center mb-10">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/10 mb-6 text-primary-dark dark:text-primary">
-                        <span class="material-icons text-3xl">pets</span>
+    <section id="view-login" class="absolute inset-0 z-50 flex flex-col w-full h-full transition-all duration-500">
+        <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            <div class="absolute inset-0 bg-paw-pattern opacity-30"></div>
+            <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px]"></div>
+        </div>
+
+        <main class="relative z-10 flex flex-1 items-center justify-center p-4 sm:p-8 w-full h-full">
+            <div class="w-full max-w-6xl h-[85vh] flex rounded-lg overflow-hidden shadow-2xl bg-surface-dark border border-[#3b5445]/30 backdrop-blur-sm">
+                
+                <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 py-12 relative">
+                    <div class="mb-10">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="bg-primary/20 p-2.5 rounded-full text-primary">
+                                <span class="material-symbols-outlined text-3xl">pets</span>
+                            </div>
+                            <h1 class="text-white text-2xl font-bold tracking-tight">J.A Pet Shop</h1>
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-3 tracking-tight">
+                            Olá balconista da <br/>
+                            <span class="text-primary">J.A Pet Shop</span>
+                        </h2>
+                        <p class="text-[#9db9a8] text-lg font-medium">Por favor, faça login para gerenciar entregas.</p>
                     </div>
-                    <h1 class="text-2xl md:text-3xl font-semibold mb-2">Bem-vindo de volta</h1>
-                    <p class="text-outline-light dark:text-outline-dark text-sm font-medium">Olá balconista da J.A Pet Shop</p>
+
+                    <form id="login-form" class="flex flex-col gap-6 w-full max-w-md">
+                        <div class="space-y-2">
+                            <label class="text-white text-sm font-semibold tracking-wide ml-1" for="username">Usuário</label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#9db9a8] group-focus-within:text-primary transition-colors">
+                                    <span class="material-symbols-outlined">person</span>
+                                </div>
+                                <input class="w-full h-14 pl-12 pr-4 bg-[#102218] border border-[#3b5445] text-white placeholder-[#5d7a68] rounded-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-300 hover:border-[#4c6b58]" id="username" placeholder="Digite seu nome de usuário" type="text" required/>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center ml-1">
+                                <label class="text-white text-sm font-semibold tracking-wide" for="password">Senha</label>
+                                <a class="text-xs text-primary font-medium hover:underline hover:text-primary/80 transition-colors" href="#">Esqueceu a senha?</a>
+                            </div>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#9db9a8] group-focus-within:text-primary transition-colors">
+                                    <span class="material-symbols-outlined">lock</span>
+                                </div>
+                                <input class="w-full h-14 pl-12 pr-12 bg-[#102218] border border-[#3b5445] text-white placeholder-[#5d7a68] rounded-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-300 hover:border-[#4c6b58]" id="password" placeholder="Digite sua senha" type="password" required/>
+                                <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#9db9a8] hover:text-white transition-colors cursor-pointer" type="button" onclick="togglePassword()">
+                                    <span class="material-symbols-outlined" id="eye-icon">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 ml-1">
+                            <input class="w-5 h-5 rounded border-[#3b5445] bg-[#102218] text-primary focus:ring-primary focus:ring-offset-background-dark cursor-pointer transition-colors" id="remember" type="checkbox"/>
+                            <label class="text-[#9db9a8] text-sm font-medium cursor-pointer select-none" for="remember">Lembrar de mim</label>
+                        </div>
+
+                        <button class="w-full h-14 mt-2 bg-primary hover:bg-[#0fd660] active:scale-[0.98] text-[#102218] text-lg font-bold rounded-full transition-all duration-200 shadow-[0_4px_14px_0_rgba(19,236,109,0.39)] hover:shadow-[0_6px_20px_rgba(19,236,109,0.23)] flex items-center justify-center gap-2" type="submit">
+                            <span>Entrar no Sistema</span>
+                            <span class="material-symbols-outlined text-xl font-bold">arrow_forward</span>
+                        </button>
+                    </form>
+                    <div class="absolute bottom-8 left-8 sm:left-16 text-xs text-[#5d7a68]">
+                        © 2026 J.A Pet Shop Delivery System. v2.0
+                    </div>
                 </div>
-                <form id="login-form" class="space-y-6" onsubmit="event.preventDefault(); handleLogin();">
-                    <div class="relative group">
-                        <input class="peer block w-full px-4 pt-6 pb-2 text-base bg-background-light dark:bg-background-dark/50 border border-outline-light/40 dark:border-outline-dark/30 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none placeholder-transparent transition-all duration-200" id="username" placeholder="Usuário" required type="text"/>
-                        <label class="floating-label absolute left-4 text-outline-light dark:text-outline-dark pointer-events-none transition-all duration-200 origin-left peer-focus:text-primary-dark dark:peer-focus:text-primary" for="username">Usuário</label>
-                        <span class="material-icons absolute right-4 top-1/2 -translate-y-1/2 text-outline-light/50 dark:text-outline-dark/50 pointer-events-none text-xl group-focus-within:text-primary-dark dark:group-focus-within:text-primary transition-colors">person</span>
+
+                <div class="hidden lg:flex w-1/2 relative bg-[#152b1f] items-end justify-center overflow-hidden">
+                    <div class="absolute inset-0 bg-cover bg-center opacity-80 mix-blend-overlay" style="background-image: url('https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2069&auto=format&fit=crop');"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-background-dark via-[#102218]/80 to-transparent"></div>
+                    
+                    <div class="relative z-10 m-12 p-8 bg-[#1c2e24]/90 backdrop-blur-md border border-[#3b5445]/50 rounded-lg shadow-2xl transform translate-y-0 transition-transform hover:-translate-y-1 duration-500">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary">
+                                <img alt="Delivery Manager" class="w-full h-full object-cover" src="https://ui-avatars.com/api/?name=Central+Entregas&background=13ec6d&color=102218"/>
+                            </div>
+                            <div>
+                                <p class="text-white font-bold text-sm">Central de Entregas</p>
+                                <p class="text-primary text-xs font-medium">Status: Operacional</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center text-sm text-[#9db9a8]">
+                                <span>Entregas hoje</span>
+                                <span class="text-white font-bold" id="login-stats-count">24</span>
+                            </div>
+                            <div class="w-full bg-[#102218] h-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full w-[75%] rounded-full"></div>
+                            </div>
+                            <p class="text-xs text-[#5d7a68] italic">"Organização é a chave para pets felizes."</p>
+                        </div>
                     </div>
-                    <div class="relative group">
-                        <input class="peer block w-full px-4 pt-6 pb-2 text-base bg-background-light dark:bg-background-dark/50 border border-outline-light/40 dark:border-outline-dark/30 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none placeholder-transparent transition-all duration-200" id="password" placeholder="Senha" required type="password"/>
-                        <label class="floating-label absolute left-4 text-outline-light dark:text-outline-dark pointer-events-none transition-all duration-200 origin-left peer-focus:text-primary-dark dark:peer-focus:text-primary" for="password">Senha</label>
-                        <span class="material-icons absolute right-4 top-1/2 -translate-y-1/2 text-outline-light/50 dark:text-outline-dark/50 cursor-pointer hover:text-primary-dark dark:hover:text-primary transition-colors text-xl">visibility</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <label class="flex items-center space-x-2 cursor-pointer group">
-                            <input class="form-checkbox rounded text-primary border-outline-light focus:ring-primary h-4 w-4 transition duration-150 ease-in-out cursor-pointer" type="checkbox"/>
-                            <span class="text-outline-light dark:text-outline-dark group-hover:text-on-surface-light dark:group-hover:text-white transition-colors">Lembrar-me</span>
-                        </label>
-                    </div>
-                    <button class="w-full relative overflow-hidden bg-primary hover:bg-primary-dark text-black font-semibold py-3.5 px-6 rounded-full shadow-md3 transition-all duration-300 transform active:scale-[0.98] group flex items-center justify-center gap-2" type="submit">
-                        <span class="relative z-10">Entrar</span>
-                        <span class="material-icons text-sm relative z-10 transition-transform group-hover:translate-x-1">arrow_forward</span>
-                    </button>
-                </form>
+                </div>
             </div>
-            <div class="fixed -bottom-32 -left-32 w-96 h-96 bg-primary/5 dark:bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-            <div class="fixed -top-32 -right-32 w-96 h-96 bg-primary/10 dark:bg-primary/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
         </main>
     </section>
 
-    <section id="view-dashboard" class="view-section flex-col">
-        <header class="sticky top-0 z-40 bg-surface-light/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-primary/10 px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <button class="p-2 rounded-full hover:bg-surface-variant-light dark:hover:bg-surface-variant-dark transition-colors">
-                    <span class="material-icons text-gray-600 dark:text-gray-300">menu</span>
-                </button>
+    <section id="view-dashboard" class="flex h-screen w-full bg-background-light dark:bg-background-dark hidden-visually opacity-0">
+        <aside class="w-20 lg:w-72 flex flex-col justify-between border-r border-primary/10 bg-surface-darker transition-all duration-300">
+            <div class="flex flex-col gap-8 p-4 lg:p-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary-content font-bold">
-                        <span class="material-icons text-primary text-2xl">pets</span>
+                    <div class="bg-primary/20 p-2 rounded-xl shrink-0">
+                        <span class="material-symbols-outlined text-primary text-3xl">pets</span>
                     </div>
-                    <h1 class="text-xl font-semibold tracking-tight text-gray-800 dark:text-white">J.A Pet Shop</h1>
-                </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-3 pl-2 border-l border-primary/10">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-medium text-gray-800 dark:text-white">João Silva</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Gerente</p>
-                    </div>
-                    <img alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/30" src="https://ui-avatars.com/api/?name=Joao+Silva&background=13ec5b&color=003b11"/>
-                </div>
-            </div>
-        </header>
-
-        <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl animate-fade-in pb-24">
-            <section class="mb-12 flex flex-col items-center justify-center">
-                <div class="relative group">
-                    <div class="absolute -inset-4 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-all duration-500"></div>
-                    <div class="relative w-64 h-64 bg-surface-light dark:bg-surface-dark rounded-full shadow-md3-elevated flex flex-col items-center justify-center border-4 border-primary/10">
-                        <div class="absolute inset-2 border-[6px] border-primary rounded-full border-t-transparent -rotate-45"></div>
-                        <span class="material-icons text-primary text-4xl mb-2">payments</span>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Vendido Hoje</p>
-                        <h2 class="text-4xl font-bold text-gray-900 dark:text-white mt-1">R$ 1.250,00</h2>
-                        <div class="mt-4 flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-xs font-semibold">
-                            <span class="material-icons text-sm">trending_up</span>
-                            <span>+12% vs ontem</span>
-                        </div>
+                    <div class="hidden lg:flex flex-col">
+                        <h1 class="text-white text-lg font-bold leading-tight">J.A Pet Shop</h1>
+                        <p class="text-primary/60 text-xs font-medium uppercase tracking-wider">Admin Panel</p>
                     </div>
                 </div>
-            </section>
-
-            <section class="space-y-6">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        Entregas Recentes
-                        <span id="delivery-count-badge" class="bg-primary/20 text-primary-content text-xs px-2 py-1 rounded-full font-bold">0</span>
-                    </h3>
-                </div>
-                
-                <div id="deliveries-grid" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    </div>
-            </section>
-        </main>
-
-        <div class="fixed bottom-8 right-8 z-30">
-            <button onclick="navigate('view-add')" class="w-16 h-16 bg-primary hover:bg-green-400 text-primary-content rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center transform hover:scale-105 active:scale-95 group">
-                <span class="material-icons text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
-            </button>
-        </div>
-    </section>
-
-    <section id="view-add" class="view-section items-center justify-center p-4">
-        <main class="w-full max-w-3xl bg-surface-light dark:bg-surface-dark rounded-[2rem] shadow-xl overflow-hidden relative animate-slide-up border border-white/50 dark:border-white/5">
-            
-            <header class="flex items-center gap-4 px-8 py-6 border-b border-gray-100 dark:border-gray-800">
-                <button onclick="navigate('view-dashboard')" class="group p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400">
-                    <span class="material-icons-round group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                </button>
-                <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Nova Entrega</h1>
-            </header>
-    
-            <form id="add-delivery-form" class="p-8 space-y-8" onsubmit="event.preventDefault(); handleSaveDelivery();">
-                
-                <div class="space-y-3">
-                    <label class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                        <span class="material-icons-round text-base text-primary">place</span>
-                        Região da Entrega
-                    </label>
-                    <div class="bg-gray-100 dark:bg-gray-800/50 p-1.5 rounded-xl flex region-selector">
-                        <div class="flex-1">
-                            <input type="radio" name="region" id="reg_geisel" value="Entrega Geisel" class="sr-only" checked>
-                            <label for="reg_geisel" class="flex items-center justify-center gap-2 py-3 rounded-lg cursor-pointer text-gray-500 dark:text-gray-400 transition-all duration-200 hover:text-gray-700 dark:hover:text-gray-200">
-                                Geisel
-                            </label>
-                        </div>
-                        <div class="flex-1">
-                            <input type="radio" name="region" id="reg_valentina" value="Entrega Valentina" class="sr-only">
-                            <label for="reg_valentina" class="flex items-center justify-center gap-2 py-3 rounded-lg cursor-pointer text-gray-500 dark:text-gray-400 transition-all duration-200 hover:text-gray-700 dark:hover:text-gray-200">
-                                Valentina
-                            </label>
-                        </div>
-                    </div>
-                </div>
-    
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="relative group">
-                        <input type="text" id="customer_name" required placeholder=" " 
-                               class="peer block w-full px-4 pt-6 pb-2 text-base bg-white dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-primary focus:ring-0 transition-all outline-none">
-                        <label class="absolute left-4 top-4 text-gray-400 text-base transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-xs peer-focus:text-primary peer-focus:font-semibold pointer-events-none">
-                            Nome do Cliente
-                        </label>
-                    </div>
-                    <div class="relative group">
-                        <input type="tel" id="customer_phone" required placeholder=" " 
-                               class="peer block w-full px-4 pt-6 pb-2 text-base bg-white dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-primary focus:ring-0 transition-all outline-none">
-                        <label class="absolute left-4 top-4 text-gray-400 text-base transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-xs peer-focus:text-primary peer-focus:font-semibold pointer-events-none">
-                            Whatsapp
-                        </label>
-                        <span class="material-icons-round absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">smartphone</span>
-                    </div>
-                </div>
-    
-                <div class="relative group">
-                    <textarea id="order_desc" placeholder=" " rows="3"
-                              class="peer block w-full px-4 pt-6 pb-6 text-base bg-white dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-primary focus:ring-0 transition-all outline-none resize-none"></textarea>
-                    <label class="absolute left-4 top-4 text-gray-400 text-base transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-xs peer-focus:text-primary peer-focus:font-semibold pointer-events-none">
-                        Descrição do Pedido
-                    </label>
-                    <div class="absolute bottom-2 right-4 text-[10px] font-medium text-gray-300 uppercase tracking-widest">Detalhes</div>
-                </div>
-    
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-2">
-                    <div class="lg:col-span-4">
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Valor Total</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">R$</span>
-                            <input type="number" id="delivery_value" step="0.01" required placeholder="0,00"
-                                   class="block w-full pl-10 pr-4 py-3.5 text-xl font-bold text-gray-800 dark:text-white bg-white dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-xl focus:border-primary focus:ring-0 transition-all outline-none placeholder-gray-300">
-                        </div>
-                    </div>
-    
-                    <div class="lg:col-span-8">
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Forma de Pagamento</label>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <input type="radio" name="payment" id="pay_money" value="Dinheiro" class="sr-only radio-card-input" checked>
-                                <label for="pay_money" class="radio-card-label flex flex-col items-center justify-center gap-1 h-full py-3 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
-                                    <span class="material-icons-outlined text-2xl text-gray-400 transition-colors">attach_money</span>
-                                    <span class="text-sm font-medium">Dinheiro</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" name="payment" id="pay_pix" value="Pix" class="sr-only radio-card-input">
-                                <label for="pay_pix" class="radio-card-label flex flex-col items-center justify-center gap-1 h-full py-3 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
-                                    <span class="material-icons-outlined text-2xl text-gray-400 transition-colors">qr_code_2</span>
-                                    <span class="text-sm font-medium">Pix</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" name="payment" id="pay_credit" value="Crédito" class="sr-only radio-card-input">
-                                <label for="pay_credit" class="radio-card-label flex flex-col items-center justify-center gap-1 h-full py-3 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
-                                    <span class="material-icons-outlined text-2xl text-gray-400 transition-colors">credit_card</span>
-                                    <span class="text-sm font-medium">Crédito</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-    
-                <div class="pt-6 flex items-center justify-end gap-4 border-t border-gray-50 dark:border-gray-800/50">
-                    <button onclick="navigate('view-dashboard')" type="button" class="px-6 py-3 rounded-full text-sm font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="px-8 py-3 rounded-full bg-primary hover:bg-primary-dark text-black font-bold shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2">
-                        <span class="material-icons-round text-lg">check</span>
-                        Salvar Entrega
-                    </button>
-                </div>
-            </form>
-    
-            <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-        </main>
-    </section>
-
-    <dialog id="delivery-modal" class="fixed inset-0 z-50 w-full h-full p-0 m-0 bg-transparent hidden backdrop:bg-black/40">
-        <div class="absolute inset-0 z-10 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div class="w-full max-w-lg bg-surface-light dark:bg-surface-dark rounded-[28px] shadow-md3-level3 flex flex-col max-h-[90vh] overflow-hidden relative border border-white/50 dark:border-white/5 animate-scale-in" onclick="event.stopPropagation()">
-                <div class="px-6 pt-8 pb-2 flex items-center gap-3 bg-surface-light dark:bg-surface-dark">
-                    <h2 class="text-2xl font-bold text-on-surface-light dark:text-white">Detalhes do Pedido</h2>
-                    <span class="flex items-center justify-center w-7 h-7 rounded-full bg-primary/20 text-primary-content dark:text-primary font-bold text-sm" id="modal-id-badge">ID</span>
-                    <button onclick="closeModal()" class="ml-auto p-2 rounded-full hover:bg-surface-variant-light dark:hover:bg-surface-variant-dark transition-colors text-gray-500 dark:text-gray-400">
-                        <span class="material-icons-round">close</span>
-                    </button>
-                </div>
-                
-                <div class="flex-1 overflow-y-auto px-6 py-4">
-                    <div class="bg-white dark:bg-surface-variant-dark rounded-[24px] p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-                        <div class="flex items-start justify-between mb-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
-                                    <span class="material-icons-round text-2xl">person</span>
-                                </div>
-                                <div>
-                                    <h3 id="modal-name" class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Nome Cliente</h3>
-                                    <p id="modal-meta" class="text-sm text-gray-500 dark:text-gray-400 font-medium">Pedido #0000 • 00:00</p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex flex-col items-end gap-2">
-                                <button id="modal-status-btn" onclick="toggleStatus()" class="px-3 py-1 rounded-full border transition-all duration-300 transform active:scale-95">
-                                    <span id="modal-status-text" class="text-xs font-semibold">Pendente</span>
-                                </button>
-                                <button onclick="openDeleteModal()" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20" title="Excluir Entrega">
-                                    <span class="material-icons-outlined text-xl">delete</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start gap-4 mb-4">
-                            <div class="text-gray-400 mt-0.5">
-                                <span class="material-icons-round text-xl">location_on</span>
-                            </div>
-                            <p id="modal-address" class="text-gray-700 dark:text-gray-200 font-medium">Endereço aqui</p>
-                        </div>
-                        
-                        <div class="flex items-start gap-4 mb-6">
-                            <div class="text-gray-400 mt-0.5">
-                                <span class="material-icons-round text-xl">shopping_bag</span>
-                            </div>
-                            <p id="modal-items" class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                                Descrição dos itens...
-                            </p>
-                        </div>
-                        
-                        <div class="border-t border-gray-100 dark:border-gray-700 my-4"></div>
-                        
-                        <div class="flex items-center justify-between">
-                            <p id="modal-price" class="text-lg font-bold text-gray-900 dark:text-white">R$ 0,00</p>
-                            <div class="flex items-center gap-1 text-xs text-gray-500">
-                                <span class="material-icons-round text-sm">payments</span>
-                                <span id="modal-payment">Pix</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-6 pt-4 border-t border-surface-variant-light dark:border-surface-variant-dark bg-surface-light dark:bg-surface-dark z-20 flex flex-col sm:flex-row gap-3">
-                    <a id="modal-whatsapp-link" href="#" target="_blank" class="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold transition-all">
-                        <svg class="w-5 h-5 fill-current text-green-600 dark:text-green-500" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.993.633 1.968.966 3.01.966h.005c3.182 0 5.768-2.586 5.769-5.766.001-3.18-2.585-5.765-5.768-5.765zm6.818 5.766c-.001 3.758-3.059 6.816-6.817 6.816-.002 0-3.057-3.058-6.816-6.816.002-3.757 3.06-6.816 6.818-6.816 3.757 0 6.815 3.059 6.817 6.816zm-1.898 3.123c-.105-.175-1.031-.508-1.19-.567-.159-.059-.275-.088-.391.088-.117.175-.45.567-.552.684-.101.116-.203.131-.362.052-.159-.079-1.077-.397-2.053-1.266-.757-.674-1.268-1.507-1.416-1.763-.149-.255-.016-.393.112-.521.116-.116.257-.302.386-.453.129-.151.171-.257.257-.424.085-.166.042-.311-.021-.437-.064-.126-.57-1.373-.781-1.88-.205-.494-.413-.427-.567-.435l-.485-.008c-.168 0-.441.063-.672.316-.231.252-.881.861-.881 2.1 0 1.24.903 2.438 1.029 2.605.126.168 1.776 2.712 4.303 3.803 2.527 1.09 2.527.727 2.98.674.453-.053 1.031-.422 1.176-.829.145-.408.145-.758.101-.829z"></path></svg>
-                        Falar com Cliente
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-3 rounded-xl bg-primary/10 text-primary transition-colors group cursor-pointer">
+                        <span class="material-symbols-outlined group-hover:scale-110 transition-transform">bar_chart</span>
+                        <p class="hidden lg:block text-sm font-bold">Dashboard</p>
                     </a>
-                    <button onclick="closeModal()" class="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-primary hover:bg-primary-dark text-black font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                        <span class="material-icons-round text-xl">arrow_back</span>
-                        Voltar
-                    </button>
-                </div>
+                    <a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-surface-dark transition-colors group cursor-pointer">
+                        <span class="material-symbols-outlined group-hover:scale-110 transition-transform">local_shipping</span>
+                        <p class="hidden lg:block text-sm font-medium">Entregadores</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-surface-dark transition-colors group cursor-pointer">
+                        <span class="material-symbols-outlined group-hover:scale-110 transition-transform">history</span>
+                        <p class="hidden lg:block text-sm font-medium">Histórico</p>
+                    </a>
+                </nav>
             </div>
-        </div>
-    </dialog>
+            <div class="p-4 lg:p-6">
+                <a class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-surface-dark transition-colors group cursor-pointer">
+                    <span class="material-symbols-outlined group-hover:scale-110 transition-transform">settings</span>
+                    <p class="hidden lg:block text-sm font-medium">Configurações</p>
+                </a>
+            </div>
+        </aside>
 
-    <dialog id="delete-modal" class="fixed inset-0 z-[60] w-full h-full p-0 m-0 bg-transparent hidden backdrop:bg-black/40">
-        <div class="absolute inset-0 z-10 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div class="w-full max-w-sm bg-surface-light dark:bg-surface-dark rounded-[28px] shadow-md3-level3 flex flex-col overflow-hidden relative border border-white/50 dark:border-white/5 animate-scale-in" onclick="event.stopPropagation()">
-                <div class="p-8 text-center">
-                    <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="material-icons-round text-3xl">delete_forever</span>
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <header class="h-20 flex items-center justify-between px-8 border-b border-primary/10 bg-background-dark/50 backdrop-blur-md z-10">
+                <h2 class="text-xl font-bold text-white tracking-tight hidden md:block">Visão Geral</h2>
+                <div class="flex items-center gap-6 ml-auto">
+                    <div class="hidden md:flex items-center bg-surface-dark px-4 py-2.5 rounded-full border border-primary/5 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all w-64 lg:w-80">
+                        <span class="material-symbols-outlined text-slate-400">search</span>
+                        <input class="bg-transparent border-none text-sm text-white placeholder-slate-400 focus:ring-0 w-full ml-2" placeholder="Buscar pedido, cliente..." type="text"/>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Excluir Entrega?</h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-8">
-                        Tem certeza que deseja remover este pedido permanentemente? Essa ação não pode ser desfeita.
-                    </p>
-                    <div class="flex gap-3">
-                        <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-full text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                            Cancelar
+                    <button class="relative p-2 text-slate-400 hover:text-white hover:bg-surface-dark rounded-full transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span class="absolute top-2 right-2 size-2 bg-primary rounded-full animate-pulse"></span>
+                    </button>
+                    <div class="flex items-center gap-3 pl-4 border-l border-primary/10 cursor-pointer group" onclick="logout()">
+                        <div class="text-right hidden lg:block">
+                            <p class="text-sm font-bold text-white leading-none" id="dashboard-username">Admin User</p>
+                            <p class="text-xs text-primary/80 mt-1">Sair do Sistema</p>
+                        </div>
+                        <div class="size-10 rounded-full bg-surface-dark border border-primary/20 overflow-hidden group-hover:border-red-500 transition-colors">
+                            <img alt="Admin Profile" class="w-full h-full object-cover" src="https://ui-avatars.com/api/?name=Admin+User&background=random"/>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-24">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-surface-dark to-surface-darker border border-primary/10 p-8 md:p-10 flex flex-col justify-center group">
+                        <div class="absolute right-0 top-0 h-full w-1/2 opacity-10 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-primary/20 text-primary p-1.5 rounded-lg"><span class="material-symbols-outlined text-lg">payments</span></span>
+                                <h3 class="text-slate-400 font-medium tracking-wide text-sm uppercase">Valor Total Vendido</h3>
+                            </div>
+                            <div class="mt-2 flex items-baseline gap-4">
+                                <h2 class="text-5xl md:text-6xl font-extrabold text-white tracking-tighter">
+                                    <span class="text-primary font-display" id="total-value-display">R$ 0,00</span>
+                                </h2>
+                                <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold flex items-center gap-1 border border-primary/20">
+                                    <span class="material-symbols-outlined text-base">trending_up</span> +12% hoje
+                                </span>
+                            </div>
+                            <p class="text-slate-500 mt-4 text-sm font-medium">Atualizado em tempo real.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex-1 bg-surface-dark rounded-[1.5rem] p-6 border border-primary/5 flex items-center justify-between hover:border-primary/20 transition-colors cursor-default">
+                            <div>
+                                <p class="text-slate-400 text-sm font-medium">Pedidos Hoje</p>
+                                <p class="text-3xl font-bold text-white mt-1" id="orders-count-display">0</p>
+                            </div>
+                            <div class="size-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                <span class="material-symbols-outlined">shopping_bag</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-surface-dark rounded-[1.5rem] p-6 border border-primary/5 flex items-center justify-between hover:border-primary/20 transition-colors cursor-default">
+                            <div>
+                                <p class="text-slate-400 text-sm font-medium">Entregadores Ativos</p>
+                                <p class="text-3xl font-bold text-white mt-1">08</p>
+                            </div>
+                            <div class="size-12 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
+                                <span class="material-symbols-outlined">moped</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-5">
+                    <div class="flex items-center justify-between px-2">
+                        <h3 class="text-2xl font-bold text-white tracking-tight">Entregas Recentes</h3>
+                        <button class="text-sm font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+                            Ver todos <span class="material-symbols-outlined text-sm">arrow_forward</span>
                         </button>
-                        <button onclick="confirmDelete()" class="flex-1 py-3 rounded-full text-sm font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 transition-all transform hover:-translate-y-0.5">
-                            Excluir
+                    </div>
+                    <div class="bg-surface-dark border border-primary/5 rounded-[1.5rem] overflow-hidden shadow-2xl shadow-black/20">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/5 bg-white/5 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                                        <th class="px-6 py-5">Cliente</th>
+                                        <th class="px-6 py-5">Bairro</th>
+                                        <th class="px-6 py-5 text-center">Status</th>
+                                        <th class="px-6 py-5 text-right">Valor</th>
+                                        <th class="px-6 py-5 text-right">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/5 text-sm" id="deliveries-table-body">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-8 right-8 z-40">
+                <button onclick="openModal()" class="group flex items-center justify-center size-16 rounded-full bg-primary text-background-dark shadow-[0_0_20px_rgba(19,236,109,0.4)] hover:shadow-[0_0_30px_rgba(19,236,109,0.6)] hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer">
+                    <span class="material-symbols-outlined text-4xl group-hover:rotate-90 transition-transform duration-300">add</span>
+                </button>
+            </div>
+        </main>
+    </section>
+
+    <div id="modal-container" class="relative z-50 hidden-visually" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div id="modal-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0 duration-300 ease-out" onclick="closeModal()"></div>
+
+        <div id="modal-panel" class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 md:p-8 text-center sm:p-0">
+                <div class="relative w-full max-w-4xl bg-white dark:bg-surface-dark rounded-[2rem] shadow-2xl overflow-hidden border border-gray-200 dark:border-[#2a4537] flex flex-col md:flex-row text-left transform opacity-0 scale-95 transition-all duration-300 ease-out">
+                    
+                    <div class="hidden md:flex flex-col justify-between w-1/3 bg-surface-darker p-8 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined">pets</span>
+                                </div>
+                                <h2 class="text-white font-bold text-xl tracking-tight">J.A Pet Shop</h2>
+                            </div>
+                            <div class="space-y-6">
+                                <div>
+                                    <h1 class="text-3xl font-extrabold text-white leading-tight mb-2">Adicionar<br/><span class="text-primary">Nova Entrega</span></h1>
+                                    <p class="text-gray-400 text-sm">Preencha os dados ao lado para agendar uma nova entrega.</p>
+                                </div>
+                                <div class="mt-8 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                                    <div class="flex items-start gap-3">
+                                        <span class="material-symbols-outlined text-primary mt-1">info</span>
+                                        <div>
+                                            <h4 class="text-white font-semibold text-sm">Dica Rápida</h4>
+                                            <p class="text-gray-400 text-xs mt-1">Lembre-se de verificar a disponibilidade dos entregadores.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-surface-dark">
+                        <div class="flex items-center justify-between mb-6 md:hidden">
+                            <h2 class="text-white font-bold text-xl">Nova Entrega</h2>
+                            <button onclick="closeModal()" class="text-gray-400 hover:text-white"><span class="material-symbols-outlined">close</span></button>
+                        </div>
+                        <button onclick="closeModal()" class="hidden md:block absolute top-6 right-6 text-gray-400 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined">close</span>
                         </button>
+
+                        <form id="delivery-form" class="space-y-6" onsubmit="saveDelivery(event)">
+                            <div class="flex justify-center mb-2">
+                                <div class="inline-flex bg-surface-darker p-1 rounded-full border border-white/5">
+                                    <label class="cursor-pointer relative">
+                                        <input checked="" class="peer sr-only" name="location" type="radio" value="geisel"/>
+                                        <span class="block px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 text-gray-400 peer-checked:bg-primary peer-checked:text-surface-darker peer-checked:shadow-lg">Entrega Geisel</span>
+                                    </label>
+                                    <label class="cursor-pointer relative">
+                                        <input class="peer sr-only" name="location" type="radio" value="valentina"/>
+                                        <span class="block px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 text-gray-400 peer-checked:bg-primary peer-checked:text-surface-darker peer-checked:shadow-lg">Entrega Valentina</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="space-y-2">
+                                    <label class="text-gray-300 text-sm font-semibold ml-1">Nome do Cliente</label>
+                                    <div class="relative group">
+                                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">person</span>
+                                        <input id="input-name" required class="w-full bg-surface-darker border border-[#2a4537] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all" placeholder="Ex: Maria Silva" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-gray-300 text-sm font-semibold ml-1">Telefone (WhatsApp)</label>
+                                    <div class="relative group">
+                                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">call</span>
+                                        <input id="input-phone" class="w-full bg-surface-darker border border-[#2a4537] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all" placeholder="(83) 99999-9999" type="tel"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-gray-300 text-sm font-semibold ml-1">Bairro / Endereço</label>
+                                <div class="relative group">
+                                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">location_on</span>
+                                    <input id="input-district" required class="w-full bg-surface-darker border border-[#2a4537] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all" placeholder="Ex: Centro" type="text"/>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                <div class="space-y-2 md:col-span-1">
+                                    <label class="text-gray-300 text-sm font-semibold ml-1">Valor</label>
+                                    <div class="relative group">
+                                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">payments</span>
+                                        <input id="input-value" required class="w-full bg-surface-darker border border-[#2a4537] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all" placeholder="0,00" type="number" step="0.01"/>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="text-gray-300 text-sm font-semibold ml-1">Pagamento</label>
+                                    <div class="grid grid-cols-4 gap-2 h-12">
+                                        <label class="cursor-pointer h-full"><input class="peer sr-only" name="payment" type="radio" value="money"/><div class="flex items-center justify-center h-full rounded-xl border border-[#2a4537] bg-surface-darker peer-checked:border-primary peer-checked:bg-primary/10 transition-all"><span class="material-symbols-outlined text-gray-400 peer-checked:text-primary">attach_money</span></div></label>
+                                        <label class="cursor-pointer h-full"><input checked class="peer sr-only" name="payment" type="radio" value="pix"/><div class="flex items-center justify-center h-full rounded-xl border border-[#2a4537] bg-surface-darker peer-checked:border-primary peer-checked:bg-primary/10 transition-all"><span class="material-symbols-outlined text-gray-400 peer-checked:text-primary">qr_code_2</span></div></label>
+                                        <label class="cursor-pointer h-full"><input class="peer sr-only" name="payment" type="radio" value="credit"/><div class="flex items-center justify-center h-full rounded-xl border border-[#2a4537] bg-surface-darker peer-checked:border-primary peer-checked:bg-primary/10 transition-all"><span class="material-symbols-outlined text-gray-400 peer-checked:text-primary">credit_card</span></div></label>
+                                        <label class="cursor-pointer h-full"><input class="peer sr-only" name="payment" type="radio" value="debit"/><div class="flex items-center justify-center h-full rounded-xl border border-[#2a4537] bg-surface-darker peer-checked:border-primary peer-checked:bg-primary/10 transition-all"><span class="material-symbols-outlined text-gray-400 peer-checked:text-primary">account_balance_wallet</span></div></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4 pt-4 mt-auto">
+                                <button onclick="closeModal()" class="flex-1 py-3.5 px-6 rounded-full border border-[#2a4537] text-gray-300 font-semibold hover:bg-white/5 transition-colors" type="button">Cancelar</button>
+                                <button class="flex-[2] py-3.5 px-6 rounded-full bg-primary hover:bg-primary-dark text-surface-darker font-bold shadow-[0_0_20px_rgba(19,236,109,0.3)] hover:shadow-[0_0_25px_rgba(19,236,109,0.5)] transition-all flex items-center justify-center gap-2" type="submit">
+                                    <span class="material-symbols-outlined text-xl">check</span> Salvar Entrega
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </dialog>
+    </div>
 
     <script>
-        // --- DATA & STATE ---
-        const initialData = [
-            { id: 1023, name: "Ana Silva", time: "14:30", status: "Em rota", address: "Rua das Flores, 123 - Centro", item: "Ração Premium 15kg", price: "189,90", payment: "Dinheiro", phone: "558399999999" },
-            { id: 1022, name: "Carlos Souza", time: "13:15", status: "Concluído", address: "Av. Paulista, 2000 - Bela Vista", item: "Coleira Antipulgas", price: "45,50", payment: "Pix", phone: "558399999999" },
-            { id: 1021, name: "Maria Oliveira", time: "12:45", status: "Pendente", address: "Rua Augusta, 500 - Consolação", item: "Petiscos Variados (3x)", price: "28,00", payment: "Crédito", phone: "558399999999" },
-            { id: 1020, name: "Roberto Dias", time: "12:10", status: "Pendente", address: "Av. Ipiranga, 890 - República", item: "Shampoo Hipoalergênico", price: "62,40", payment: "Pix", phone: "558399999999" }
+        // --- DATA INITIALIZATION ---
+        const DEFAULT_DELIVERIES = [
+            { id: "#ORD-9281", client: "Ana Silva", district: "Centro", status: "Em Rota", value: 120.50, initials: "AS", color: "bg-slate-700" },
+            { id: "#ORD-9280", client: "Carlos Souza", district: "Jardim Botânico", status: "Pendente", value: 85.00, initials: "CS", color: "bg-purple-900/50" },
+            { id: "#ORD-9279", client: "Mariana Lima", district: "Vila Nova", status: "Entregue", value: 200.00, initials: "ML", color: "bg-pink-900/50" },
+            { id: "#ORD-9278", client: "Roberto Dias", district: "Centro", status: "Entregue", value: 45.90, initials: "RD", color: "bg-blue-900/50" }
         ];
 
-        let currentModalId = null;
-
-        // --- NAVIGATION ---
-        function navigate(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            if (viewId === 'view-dashboard') renderDashboard();
+        // --- APP STATE & UTILS ---
+        function formatMoney(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         }
 
-        function handleLogin() {
-            const user = document.getElementById('username').value;
-            if(user) {
-                localStorage.setItem('ja_user', user);
-                navigate('view-dashboard');
-            }
-        }
-
-        // --- CORE DATA FUNCTIONS ---
         function getDeliveries() {
             const stored = localStorage.getItem('ja_deliveries');
-            if (stored) return JSON.parse(stored);
-            localStorage.setItem('ja_deliveries', JSON.stringify(initialData));
-            return initialData;
+            return stored ? JSON.parse(stored) : DEFAULT_DELIVERIES;
         }
 
-        function updateDeliveryStatus(id, newStatus) {
-            let list = getDeliveries();
-            const index = list.findIndex(d => d.id == id);
-            if(index !== -1) {
-                list[index].status = newStatus;
-                localStorage.setItem('ja_deliveries', JSON.stringify(list));
-                renderDashboard(); // Re-render background list
+        function saveDeliveries(data) {
+            localStorage.setItem('ja_deliveries', JSON.stringify(data));
+        }
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerText = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.innerText = 'visibility';
             }
         }
+
+        // --- NAVIGATION LOGIC ---
+        const viewLogin = document.getElementById('view-login');
+        const viewDashboard = document.getElementById('view-dashboard');
+
+        function init() {
+            const user = localStorage.getItem('ja_user');
+            if (user) {
+                showDashboard(false); // No animation on reload
+            } else {
+                showLogin();
+            }
+            renderTable();
+        }
+
+        function showLogin() {
+            viewLogin.classList.remove('hidden-visually', 'opacity-0');
+            viewDashboard.classList.add('hidden-visually', 'opacity-0');
+        }
+
+        function showDashboard(animate = true) {
+            if (animate) {
+                viewLogin.classList.add('opacity-0', '-translate-y-4');
+                setTimeout(() => {
+                    viewLogin.classList.add('hidden-visually');
+                    viewDashboard.classList.remove('hidden-visually');
+                    // Force reflow
+                    void viewDashboard.offsetWidth; 
+                    viewDashboard.classList.remove('opacity-0');
+                }, 500);
+            } else {
+                viewLogin.classList.add('hidden-visually');
+                viewDashboard.classList.remove('hidden-visually', 'opacity-0');
+            }
+            renderTable();
+        }
+
+        function logout() {
+            if(confirm("Deseja sair do sistema?")) {
+                localStorage.removeItem('ja_user');
+                location.reload();
+            }
+        }
+
+        // --- LOGIN FORM ---
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            localStorage.setItem('ja_user', username);
+            document.getElementById('dashboard-username').innerText = username;
+            showDashboard(true);
+        });
 
         // --- DASHBOARD RENDER ---
-        function getStatusStyles(status) {
-            // Colors logic: Pendente (Red/Orange), Em rota (Purple), Concluído (Green)
-            switch(status) {
-                case 'Em rota': 
-                    return { 
-                        bg: 'bg-purple-50 dark:bg-purple-900/20', 
-                        text: 'text-purple-700 dark:text-purple-300', 
-                        border: 'border-purple-100 dark:border-purple-800/50',
-                        icon: 'local_shipping', 
-                        iconBg: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' 
-                    };
-                case 'Concluído': 
-                    return { 
-                        bg: 'bg-green-50 dark:bg-green-900/20', 
-                        text: 'text-green-700 dark:text-green-300', 
-                        border: 'border-green-100 dark:border-green-800/50',
-                        icon: 'check_circle', 
-                        iconBg: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
-                    };
-                default: // Pendente
-                    return { 
-                        bg: 'bg-orange-50 dark:bg-orange-900/20', 
-                        text: 'text-orange-700 dark:text-orange-300', 
-                        border: 'border-orange-100 dark:border-orange-800/50',
-                        icon: 'schedule', 
-                        iconBg: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' 
-                    };
-            }
+        function getStatusHTML(status) {
+            if (status === 'Em Rota') return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/20"><span class="size-1.5 rounded-full bg-yellow-400 mr-2 animate-pulse"></span>Em Rota</span>`;
+            if (status === 'Pendente') return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-700/50 text-slate-300 border border-slate-600/30">Pendente</span>`;
+            if (status === 'Entregue') return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary/20 text-primary border border-primary/20">Entregue</span>`;
+            if (status === 'Cancelado') return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">Cancelado</span>`;
+            return status;
         }
 
-        function renderDashboard() {
-            const list = getDeliveries();
-            const grid = document.getElementById('deliveries-grid');
-            document.getElementById('delivery-count-badge').textContent = list.length;
+        function renderTable() {
+            const data = getDeliveries();
+            const tbody = document.getElementById('deliveries-table-body');
+            tbody.innerHTML = '';
             
-            grid.innerHTML = ''; 
+            let totalVal = 0;
 
-            list.forEach(d => {
-                const styles = getStatusStyles(d.status);
-                
-                const card = `
-                <article onclick="openModal(${d.id})" class="cursor-pointer bg-surface-light dark:bg-surface-dark rounded-xl p-5 shadow-sm border border-primary/5 hover:border-primary/30 hover:shadow-md3 transition-all duration-300 group">
-                    <div class="flex justify-between items-start mb-4">
+            data.forEach(item => {
+                totalVal += parseFloat(item.value);
+                const tr = document.createElement('tr');
+                tr.className = "group hover:bg-white/[0.02] transition-colors border-b border-white/5";
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full ${styles.iconBg} flex items-center justify-center">
-                                <span class="material-icons">${styles.icon}</span>
-                            </div>
+                            <div class="size-10 rounded-full ${item.color || 'bg-slate-700'} flex items-center justify-center text-white font-bold text-xs border border-white/10">${item.initials}</div>
                             <div>
-                                <h4 class="font-bold text-gray-900 dark:text-white">${d.name}</h4>
-                                <p class="text-xs text-gray-500">Pedido #${d.id} • ${d.time}</p>
+                                <p class="font-bold text-white">${item.client}</p>
+                                <p class="text-xs text-slate-500">${item.id}</p>
                             </div>
                         </div>
-                        <span class="${styles.bg} ${styles.text} text-xs px-3 py-1 rounded-full font-medium border ${styles.border}">
-                            ${d.status}
-                        </span>
-                    </div>
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-                            <span class="material-icons text-gray-400 text-base mt-0.5">location_on</span>
-                            <span class="line-clamp-1">${d.address}</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                            <span class="material-icons text-gray-400 text-base">shopping_bag</span>
-                            <span class="line-clamp-1">${d.item}</span>
-                        </div>
-                    </div>
-                    <div class="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                        <span class="font-bold text-gray-900 dark:text-white">R$ ${d.price}</span>
-                        <span class="text-gray-400 group-hover:text-primary transition-colors material-icons">chevron_right</span>
-                    </div>
-                </article>
+                    </td>
+                    <td class="px-6 py-4 text-slate-300">${item.district}</td>
+                    <td class="px-6 py-4 text-center">${getStatusHTML(item.status)}</td>
+                    <td class="px-6 py-4 text-right font-medium text-white">${formatMoney(item.value)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="text-slate-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/5"><span class="material-symbols-outlined text-lg">more_vert</span></button>
+                    </td>
                 `;
-                grid.innerHTML += card;
+                tbody.appendChild(tr);
             });
+
+            // Update Stats
+            document.getElementById('total-value-display').innerText = formatMoney(totalVal);
+            document.getElementById('orders-count-display').innerText = data.length.toString().padStart(2, '0');
+            document.getElementById('login-stats-count').innerText = data.length;
         }
 
         // --- MODAL LOGIC ---
-        function openModal(id) {
-            const list = getDeliveries();
-            const d = list.find(item => item.id == id);
-            if(!d) return;
+        const modalContainer = document.getElementById('modal-container');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalPanel = document.querySelector('#modal-panel > div > div'); // The inner card
 
-            currentModalId = id;
-
-            // Populate Fields
-            document.getElementById('modal-id-badge').textContent = d.id;
-            document.getElementById('modal-name').textContent = d.name;
-            document.getElementById('modal-meta').textContent = `Pedido #${d.id} • ${d.time}`;
-            document.getElementById('modal-address').textContent = d.address;
-            document.getElementById('modal-items').textContent = d.item;
-            document.getElementById('modal-price').textContent = `R$ ${d.price}`;
-            document.getElementById('modal-payment').textContent = d.payment;
-            
-            // Set Whatsapp Link
-            const phone = d.phone || '550000000000';
-            const msg = `Olá ${d.name}, sobre seu pedido #${d.id} no J.A Pet Shop...`;
-            document.getElementById('modal-whatsapp-link').href = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-
-            // Render Initial Status Pill
-            renderModalStatusPill(d.status);
-
-            // Show Modal
-            const modal = document.getElementById('delivery-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        function openModal() {
+            modalContainer.classList.remove('hidden-visually');
+            // Small delay to allow transition to catch opacity change
+            setTimeout(() => {
+                modalBackdrop.classList.remove('opacity-0');
+                modalPanel.classList.remove('opacity-0', 'scale-95');
+                modalPanel.classList.add('opacity-100', 'scale-100');
+            }, 10);
         }
 
         function closeModal() {
-            const modal = document.getElementById('delivery-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            currentModalId = null;
+            modalBackdrop.classList.add('opacity-0');
+            modalPanel.classList.remove('opacity-100', 'scale-100');
+            modalPanel.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modalContainer.classList.add('hidden-visually');
+                document.getElementById('delivery-form').reset();
+            }, 300);
         }
 
-        function toggleStatus() {
-            if(!currentModalId) return;
-            const list = getDeliveries();
-            const d = list.find(item => item.id == currentModalId);
+        function saveDelivery(e) {
+            e.preventDefault();
             
-            // Logic: Pendente -> Em rota -> Concluído -> Pendente
-            let nextStatus = 'Pendente';
-            if(d.status === 'Pendente') nextStatus = 'Em rota';
-            else if(d.status === 'Em rota') nextStatus = 'Concluído';
+            const name = document.getElementById('input-name').value;
+            const district = document.getElementById('input-district').value;
+            const val = parseFloat(document.getElementById('input-value').value);
             
-            updateDeliveryStatus(currentModalId, nextStatus);
-            renderModalStatusPill(nextStatus);
-        }
-
-        function renderModalStatusPill(status) {
-            const btn = document.getElementById('modal-status-btn');
-            const txt = document.getElementById('modal-status-text');
-            const styles = getStatusStyles(status);
-
-            // Remove old classes
-            btn.className = 'px-3 py-1 rounded-full border transition-all duration-300 transform active:scale-95 select-none';
-            // Add new classes
-            btn.classList.add(...styles.bg.split(' '));
-            btn.classList.add(...styles.border.split(' '));
+            // Generate initials
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
             
-            txt.className = 'text-xs font-semibold';
-            txt.classList.add(...styles.text.split(' '));
-            
-            txt.textContent = status;
-        }
-
-        // --- DELETE MODAL LOGIC ---
-        function openDeleteModal() {
-            const modal = document.getElementById('delete-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeDeleteModal() {
-            const modal = document.getElementById('delete-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function confirmDelete() {
-            if(!currentModalId) return;
-
-            let list = getDeliveries();
-            list = list.filter(d => d.id != currentModalId);
-            localStorage.setItem('ja_deliveries', JSON.stringify(list));
-
-            closeDeleteModal();
-            closeModal();
-            renderDashboard();
-        }
-
-        // --- ADD FORM LOGIC ---
-        function handleSaveDelivery() {
-            const name = document.getElementById('customer_name').value;
-            const phone = document.getElementById('customer_phone').value;
-            const region = document.querySelector('input[name="region"]:checked').value;
-            const desc = document.getElementById('order_desc').value || "Pedido Personalizado";
-            const val = document.getElementById('delivery_value').value;
-            const payment = document.querySelector('input[name="payment"]:checked').value;
+            // Random ID
+            const id = "#ORD-" + Math.floor(Math.random() * 9000 + 1000);
 
             const newDelivery = {
-                id: Math.floor(Math.random() * 9000 + 1000),
-                name: name,
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                status: 'Pendente',
-                address: region === 'Entrega Geisel' ? 'Bairro do Geisel (Local)' : 'Bairro Valentina (Zona Sul)',
-                item: desc,
-                price: parseFloat(val).toFixed(2).replace('.', ','),
-                payment: payment,
-                phone: phone.replace(/\D/g, '') // strip non-digits
+                id: id,
+                client: name,
+                district: district,
+                status: "Pendente",
+                value: val,
+                initials: initials,
+                color: "bg-primary/20 text-primary" // Default new color
             };
 
             const list = getDeliveries();
-            list.unshift(newDelivery); 
-            localStorage.setItem('ja_deliveries', JSON.stringify(list));
-
-            document.getElementById('add-delivery-form').reset();
-            navigate('view-dashboard');
+            list.unshift(newDelivery); // Add to top
+            saveDeliveries(list);
+            
+            renderTable();
+            closeModal();
         }
 
-        // --- INIT ---
-        window.onload = function() {
-            if(localStorage.getItem('ja_user')) {
-                navigate('view-dashboard');
-            } else {
-                navigate('view-login');
-            }
-        };
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
