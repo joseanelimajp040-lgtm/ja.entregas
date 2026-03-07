@@ -25,6 +25,10 @@
 <title>J.A Pet Shop — Entregas</title>
 <style>
   body { font-family: 'Inter', sans-serif; }
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .login-anim { animation: fadeInUp 0.4s ease forwards; }
+  @keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+  .fade-out { animation: fadeOut 0.4s ease forwards; }
   .custom-scrollbar::-webkit-scrollbar { width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #4a3a21; border-radius: 10px; }
@@ -39,6 +43,88 @@
 </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased min-h-screen">
+
+<!-- ═══════════════════════ LOGIN SCREEN ═══════════════════════ -->
+<div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+  <!-- Decorative blobs -->
+  <div class="fixed -bottom-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+  <div class="fixed -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+
+  <div class="login-anim relative w-full max-w-[480px] flex flex-col gap-8">
+    <!-- Logo -->
+    <div class="flex flex-col items-center gap-4">
+      <div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center text-background-dark shadow-lg shadow-primary/20">
+        <span class="material-symbols-outlined text-4xl" style="font-variation-settings:'FILL' 1">pets</span>
+      </div>
+      <div class="text-center">
+        <h1 class="text-3xl font-bold tracking-tight">J.A Pet Shop</h1>
+        <p class="text-slate-500 dark:text-primary/70 font-medium">Sistema de Gestão</p>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-8 shadow-2xl backdrop-blur-sm">
+      <h2 class="text-xl font-semibold mb-6 text-center">Bem-vindo de volta</h2>
+
+      <!-- Role selector -->
+      <div class="flex p-1 bg-slate-100 dark:bg-primary/10 rounded-xl mb-6">
+        <label class="flex-1">
+          <input checked class="peer hidden" name="role" type="radio" value="entregador"/>
+          <div class="cursor-pointer py-2 text-center rounded-lg text-sm font-medium transition-all peer-checked:bg-white dark:peer-checked:bg-primary peer-checked:text-background-dark text-slate-500 dark:text-slate-400">
+            Entregador
+          </div>
+        </label>
+        <label class="flex-1">
+          <input class="peer hidden" name="role" type="radio" value="balconista"/>
+          <div class="cursor-pointer py-2 text-center rounded-lg text-sm font-medium transition-all peer-checked:bg-white dark:peer-checked:bg-primary peer-checked:text-background-dark text-slate-500 dark:text-slate-400">
+            Balconista
+          </div>
+        </label>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium px-1">Usuário / E-mail</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
+            <input id="login-user" type="text" placeholder="seu@email.com"
+              class="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-primary/30 dark:text-white"/>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium px-1">Senha</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+            <input id="login-pass" type="password" placeholder="••••••••"
+              onkeydown="if(event.key==='Enter')doLogin()"
+              class="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-primary/30 dark:text-white"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-3 mb-6">
+        <a href="#" class="text-sm font-medium text-primary hover:underline">Esqueci minha senha</a>
+      </div>
+
+      <!-- Error msg -->
+      <div id="login-error" class="hidden mb-4 text-sm text-red-400 bg-red-500/10 border border-red-400/20 rounded-lg px-4 py-2.5 flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">error</span>
+        <span>Preencha o usuário e a senha para continuar.</span>
+      </div>
+
+      <button onclick="doLogin()"
+        class="w-full py-4 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99]">
+        <span>Entrar</span>
+        <span class="material-symbols-outlined">login</span>
+      </button>
+    </div>
+
+    <p class="text-center text-sm text-slate-500 dark:text-slate-400">© 2024 J.A Pet Shop. Todos os direitos reservados.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DASHBOARD (hidden until login) ═══════════════════════ -->
+<div id="dashboard" class="hidden">
 
 <!-- ═══════════════════════ HEADER ═══════════════════════ -->
 <header class="border-b border-primary/10 bg-background-light dark:bg-background-dark/50 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-10 py-4">
@@ -308,7 +394,29 @@
   <span id="toast-msg" class="text-sm font-medium">Entrega criada!</span>
 </div>
 
+</div><!-- end #dashboard -->
+
 <script>
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const err  = document.getElementById('login-error');
+  if (!user || !pass) {
+    err.classList.remove('hidden');
+    err.classList.add('flex');
+    return;
+  }
+  err.classList.add('hidden');
+  err.classList.remove('flex');
+  const ls = document.getElementById('login-screen');
+  ls.classList.add('fade-out');
+  setTimeout(() => {
+    ls.classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+  }, 380);
+}
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let deliveries = [];
 let selectedZone = null;
