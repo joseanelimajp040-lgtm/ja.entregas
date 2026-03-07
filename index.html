@@ -223,7 +223,7 @@
   </div>
 </main>
 
-<!-- FAB mobile -->
+<!-- FAB mobile (only on dashboard) -->
 <div class="md:hidden fixed bottom-6 right-6 z-40">
   <button onclick="openModal()" class="size-16 rounded-full bg-primary text-background-dark shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform">
     <span class="material-symbols-outlined text-3xl font-bold">add</span>
@@ -388,13 +388,74 @@
   </div>
 </div>
 
-<!-- ═══════════════════════ TOAST ═══════════════════════ -->
+</div><!-- end #dashboard -->
+
+<!-- ═══════════════════════ TOAST (global) ═══════════════════════ -->
 <div id="toast" class="hidden fixed bottom-6 right-6 z-[999] bg-background-light dark:bg-background-dark border border-primary/20 rounded-xl px-5 py-3.5 flex items-center gap-3 shadow-2xl max-w-xs">
   <span id="toast-icon" class="text-xl">✅</span>
   <span id="toast-msg" class="text-sm font-medium">Entrega criada!</span>
 </div>
 
-</div><!-- end #dashboard -->
+<!-- ═══════════════════════ TELA ENTREGADOR ═══════════════════════ -->
+<!-- Mobile frame wrapper on desktop -->
+<div id="deliverer-screen" class="hidden min-h-screen bg-slate-300 dark:bg-slate-900 flex items-start justify-center py-0 md:py-8">
+  <div class="w-full md:w-[390px] md:rounded-3xl md:shadow-2xl overflow-hidden bg-background-light dark:bg-background-dark flex flex-col min-h-screen md:min-h-0 md:max-h-[850px] relative">
+
+    <!-- Header -->
+    <header class="p-4 border-b border-primary/10 bg-background-light dark:bg-background-dark sticky top-0 z-10">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="size-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+            <span class="material-symbols-outlined text-primary">pets</span>
+          </div>
+          <h1 class="text-lg font-bold tracking-tight">J.A Pet Shop</h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="delivererLogout()" title="Sair" class="size-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-primary/10 text-slate-600 dark:text-primary hover:bg-red-500/10 hover:text-red-400 transition-colors">
+            <span class="material-symbols-outlined text-xl">logout</span>
+          </button>
+        </div>
+      </div>
+      <!-- Profile card -->
+      <div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10">
+        <div class="flex items-center gap-3">
+          <div class="size-12 rounded-full bg-primary/30 flex items-center justify-center border-2 border-primary shrink-0">
+            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">person</span>
+          </div>
+          <div>
+            <h2 class="font-bold" id="deliverer-name">Entregador</h2>
+            <div class="flex items-center gap-1.5">
+              <span class="size-2 rounded-full bg-green-500 inline-block"></span>
+              <span class="text-sm text-slate-500 dark:text-primary/70">Online</span>
+            </div>
+          </div>
+        </div>
+        <span class="text-xs font-bold bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg">Entregador</span>
+      </div>
+    </header>
+
+    <!-- Main scrollable -->
+    <main class="flex-1 overflow-y-auto p-4 pb-24 space-y-5 custom-scrollbar" id="deliverer-main">
+      <!-- Filled by renderDeliverer() -->
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-primary/20">
+      <div class="flex h-16">
+        <button onclick="setDelivererTab('entregas')" id="dtab-entregas"
+          class="flex-1 flex flex-col items-center justify-center gap-1 text-primary transition-colors">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">local_shipping</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider">Entregas</span>
+        </button>
+        <button onclick="setDelivererTab('historico')" id="dtab-historico"
+          class="flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-primary/40 transition-colors">
+          <span class="material-symbols-outlined">history</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider">Histórico</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+</div>
 
 <script>
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
@@ -409,12 +470,199 @@ function doLogin() {
   }
   err.classList.add('hidden');
   err.classList.remove('flex');
+  const role = document.querySelector('input[name="role"]:checked')?.value || 'balconista';
   const ls = document.getElementById('login-screen');
   ls.classList.add('fade-out');
   setTimeout(() => {
     ls.classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
+    if (role === 'entregador') {
+      document.getElementById('deliverer-name').textContent = user;
+      document.getElementById('deliverer-screen').classList.remove('hidden');
+      loadData(); renderDeliverer();
+    } else {
+      document.getElementById('dashboard').classList.remove('hidden');
+      loadData(); renderAll();
+    }
   }, 380);
+}
+
+// ─── DELIVERER LOGOUT ────────────────────────────────────────────────────────
+function delivererLogout() {
+  document.getElementById('deliverer-screen').classList.add('hidden');
+  const ls = document.getElementById('login-screen');
+  ls.classList.remove('hidden', 'fade-out');
+  ls.style.opacity = '';
+  // Re-trigger animation
+  ls.querySelector('.login-anim').style.animation = 'none';
+  requestAnimationFrame(() => { ls.querySelector('.login-anim').style.animation = ''; });
+}
+
+// ─── DELIVERER TAB ────────────────────────────────────────────────────────────
+let delivererTab = 'entregas';
+function setDelivererTab(tab) {
+  delivererTab = tab;
+  ['entregas','historico'].forEach(t => {
+    const btn = document.getElementById('dtab-' + t);
+    if (t === tab) {
+      btn.className = 'flex-1 flex flex-col items-center justify-center gap-1 text-primary transition-colors';
+    } else {
+      btn.className = 'flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-primary/40 transition-colors';
+    }
+  });
+  renderDeliverer();
+}
+
+// ─── RENDER DELIVERER ─────────────────────────────────────────────────────────
+function renderDeliverer() {
+  const main = document.getElementById('deliverer-main');
+  main.innerHTML = '';
+
+  if (delivererTab === 'entregas') {
+    const routeDeliveries = deliveries.filter(d => d.status === 'route');
+    const pendingDeliveries = deliveries.filter(d => d.status === 'pending');
+
+    if (routeDeliveries.length === 0 && pendingDeliveries.length === 0) {
+      main.innerHTML = `
+        <div class="flex flex-col items-center justify-center gap-3 pt-20 text-slate-400 dark:text-slate-600">
+          <span class="material-symbols-outlined text-6xl opacity-30">two_wheeler</span>
+          <p class="text-sm text-center">Nenhuma entrega em rota no momento.<br>Aguarde o balconista adicionar pedidos.</p>
+        </div>`;
+      return;
+    }
+
+    // Active route card (first in route)
+    if (routeDeliveries.length > 0) {
+      const active = routeDeliveries[0];
+      const methodLabels = { credito:'Crédito', debito:'Débito', dinheiro:'Dinheiro', pix:'PIX' };
+      const paidColor = active.paid ? 'bg-green-500/10 border-green-500/20' : 'bg-orange-500/10 border-orange-500/20';
+      const paidText  = active.paid ? 'text-green-600 dark:text-green-400' : 'text-orange-500';
+      const paidLabel = active.paid ? 'Pago' : 'Pagar na entrega';
+      const methodLabel = active.method ? (methodLabels[active.method] || active.method) : '—';
+      const zoneLabel = active.zone === 'geisel' ? 'Geisel' : 'Valentina';
+
+      const activeCard = document.createElement('div');
+      activeCard.innerHTML = `
+        <h3 class="text-lg font-bold mb-3">Em Andamento</h3>
+        <div class="bg-slate-50 dark:bg-primary/5 border border-primary/20 rounded-xl overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-primary/10 flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Em Rota · ${zoneLabel}</p>
+              <h4 class="text-lg font-bold">${esc(active.name)}</h4>
+            </div>
+            <span class="text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-400/20 px-2 py-1 rounded-full">Em Trânsito</span>
+          </div>
+          <div class="p-4 space-y-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex gap-3">
+                <span class="material-symbols-outlined text-primary mt-0.5">map</span>
+                <p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">${esc(active.address)}</p>
+              </div>
+            </div>
+            ${active.phone ? `
+            <div class="flex items-center justify-between gap-4 border-t border-primary/10 pt-4">
+              <div class="flex gap-3 items-center">
+                <span class="material-symbols-outlined text-primary">call</span>
+                <p class="text-sm">${esc(active.phone)}</p>
+              </div>
+            </div>` : ''}
+            <div class="bg-white/50 dark:bg-background-dark/50 rounded-lg p-3 space-y-2">
+              <div class="flex justify-between items-center text-xs text-slate-500 dark:text-primary/60 uppercase font-bold">
+                <span>Produtos</span>
+              </div>
+              <p class="text-sm text-slate-700 dark:text-slate-200">${esc(active.desc)}</p>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-lg ${paidColor} border">
+              <div>
+                <p class="text-xs ${paidText} font-bold uppercase">Pagamento · ${methodLabel}</p>
+                <p class="font-bold">${paidLabel}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-slate-500 dark:text-primary/60 uppercase font-bold">Total</p>
+                <p class="text-lg font-bold text-primary">R$ ${esc(active.value)}</p>
+              </div>
+            </div>
+            <button onclick="delivererConfirm('${active.id}')"
+              class="w-full bg-primary hover:bg-primary/90 text-background-dark py-4 rounded-xl font-bold text-base shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined">check_circle</span>
+              Confirmar Entrega
+            </button>
+          </div>
+        </div>`;
+      main.appendChild(activeCard);
+
+      // Remaining route deliveries
+      const rest = routeDeliveries.slice(1);
+      if (rest.length > 0) {
+        const restTitle = document.createElement('h3');
+        restTitle.className = 'text-base font-bold mt-2';
+        restTitle.textContent = 'Próximas em Rota';
+        main.appendChild(restTitle);
+        rest.forEach(d => main.appendChild(buildDelivererMiniCard(d)));
+      }
+    }
+
+    // Pending deliveries (read-only view for deliverer)
+    if (pendingDeliveries.length > 0) {
+      const pendTitle = document.createElement('h3');
+      pendTitle.className = 'text-base font-bold mt-2';
+      pendTitle.textContent = 'Aguardando Rota';
+      main.appendChild(pendTitle);
+      pendingDeliveries.forEach(d => main.appendChild(buildDelivererMiniCard(d, true)));
+    }
+
+  } else {
+    // HISTÓRICO tab
+    const doneDeliveries = deliveries.filter(d => d.status === 'done');
+    if (doneDeliveries.length === 0) {
+      main.innerHTML = `
+        <div class="flex flex-col items-center justify-center gap-3 pt-20 text-slate-400 dark:text-slate-600">
+          <span class="material-symbols-outlined text-6xl opacity-30">task_alt</span>
+          <p class="text-sm">Nenhuma entrega concluída ainda.</p>
+        </div>`;
+      return;
+    }
+    const title = document.createElement('h3');
+    title.className = 'text-lg font-bold';
+    title.textContent = 'Entregas Concluídas';
+    main.appendChild(title);
+    doneDeliveries.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'card-anim p-4 rounded-xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 opacity-80 flex items-start justify-between gap-3';
+      card.innerHTML = `
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-green-500 text-base">task_alt</span>
+            <h5 class="font-bold">${esc(d.name)}</h5>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-primary/60 mb-1">${esc(d.address)}</p>
+          <p class="text-sm font-bold text-primary">R$ ${esc(d.value)}</p>
+        </div>
+        <span class="text-xs bg-green-500/10 text-green-500 border border-green-500/20 px-2 py-1 rounded-full font-bold shrink-0">Concluída</span>`;
+      main.appendChild(card);
+    });
+  }
+}
+
+function buildDelivererMiniCard(d, muted = false) {
+  const el = document.createElement('div');
+  el.className = `card-anim p-4 rounded-xl bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10 flex items-center justify-between ${muted ? 'opacity-60' : ''}`;
+  el.innerHTML = `
+    <div class="flex flex-col gap-0.5">
+      <h5 class="font-bold">${esc(d.name)}</h5>
+      <p class="text-xs text-slate-500 dark:text-primary/60">${esc(d.address)}</p>
+      <p class="text-sm font-bold text-primary mt-0.5">R$ ${esc(d.value)}</p>
+    </div>
+    <span class="material-symbols-outlined text-primary text-2xl">chevron_right</span>`;
+  return el;
+}
+
+function delivererConfirm(id) {
+  const d = deliveries.find(x => x.id === id);
+  if (!d) return;
+  d.status = 'done';
+  saveData();
+  renderDeliverer();
+  showToast(`Entrega de ${d.name} concluída!`, '✅');
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
