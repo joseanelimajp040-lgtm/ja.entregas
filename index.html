@@ -4,6 +4,9 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
@@ -60,7 +63,7 @@
   <div class="login-anim relative w-full max-w-[480px] flex flex-col gap-8">
     <!-- Logo -->
     <div class="flex flex-col items-center gap-4">
-      <img src="https://i.postimg.cc/bN5NwWZs/Whats-App-Image-2026-03-04-at-16-46-09-removebg-preview.png" alt="Logo" class="w- h-20 object-contain"/>
+      <img src="" alt="Logo" class="w-16 h-16 object-contain"/>
       <div class="text-center">
         <h1 class="text-3xl font-bold tracking-tight">J.A Pet Shop</h1>
         <p class="text-slate-500 dark:text-primary/70 font-medium">Sistema de Gestão</p>
@@ -131,14 +134,81 @@
 <!-- ═══════════════════════ DASHBOARD (hidden until login) ═══════════════════════ -->
 <div id="dashboard" class="hidden">
 
+<!-- ═══════════════════════ SIDEBAR MENU ═══════════════════════ -->
+<div id="sidebar-overlay" onclick="closeSidebar()"
+  class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]">
+</div>
+
+<aside id="sidebar"
+  class="fixed top-0 left-0 h-full w-72 bg-background-light dark:bg-background-dark border-r border-primary/10 z-[70] flex flex-col shadow-2xl"
+  style="transform:translateX(-100%); transition:transform 0.3s cubic-bezier(.32,.72,0,1)">
+
+  <!-- Sidebar header -->
+  <div class="flex items-center justify-between px-5 py-5 border-b border-primary/10">
+    <img src="" alt="Logo" class="h-9 w-auto object-contain"/>
+    <button onclick="closeSidebar()"
+      class="size-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-primary/10 text-slate-500 dark:text-primary/60 hover:text-slate-800 dark:hover:text-primary transition-colors">
+      <span class="material-symbols-outlined text-xl">close</span>
+    </button>
+  </div>
+
+  <!-- Menu items -->
+  <nav class="flex-1 px-3 py-4 flex flex-col gap-1">
+
+    <button onclick="sidebarGeneratePDF()"
+      class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium text-sm text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-all group">
+      <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+        <span class="material-symbols-outlined text-primary text-lg">picture_as_pdf</span>
+      </div>
+      <div>
+        <p class="font-semibold">Gerar Relatório</p>
+        <p class="text-xs text-slate-400 dark:text-primary/40 font-normal">Exportar entregas em PDF</p>
+      </div>
+    </button>
+
+    <button onclick="sidebarReportProblem()"
+      class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium text-sm text-slate-700 dark:text-slate-200 hover:bg-orange-500/10 hover:text-orange-500 transition-all group">
+      <div class="size-9 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0 group-hover:bg-orange-500/20 transition-colors">
+        <span class="material-symbols-outlined text-orange-500 text-lg">flag</span>
+      </div>
+      <div>
+        <p class="font-semibold">Relatar Problema</p>
+        <p class="text-xs text-slate-400 dark:text-primary/40 font-normal">Reportar uma ocorrência</p>
+      </div>
+    </button>
+
+    <!-- divider -->
+    <div class="my-2 h-px bg-slate-200 dark:bg-primary/10 mx-2"></div>
+
+    <button onclick="sidebarLogout()"
+      class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium text-sm text-red-500 hover:bg-red-500/10 transition-all group">
+      <div class="size-9 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0 group-hover:bg-red-500/20 transition-colors">
+        <span class="material-symbols-outlined text-red-500 text-lg">logout</span>
+      </div>
+      <p class="font-semibold">Sair</p>
+    </button>
+
+  </nav>
+
+  <!-- Sidebar footer -->
+  <div class="px-5 py-4 border-t border-primary/10">
+    <p class="text-xs text-slate-400 dark:text-primary/30 text-center">© 2024 J.A Pet Shop</p>
+  </div>
+
+</aside>
+
 <!-- ═══════════════════════ HEADER ═══════════════════════ -->
 <header class="border-b border-primary/10 bg-background-light dark:bg-background-dark/50 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-10 py-4">
   <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <div class="bg-primary rounded-lg p-1.5 flex items-center justify-center text-background-dark">
-        <span class="material-symbols-outlined text-2xl font-bold">pets</span>
-      </div>
-      <h1 class="text-xl font-bold tracking-tight">J.A <span class="text-primary">Pet Shop</span></h1>
+      <!-- Hamburger -->
+      <button onclick="openSidebar()"
+        class="size-10 flex flex-col items-center justify-center gap-[5px] rounded-xl bg-slate-100 dark:bg-primary/10 hover:bg-primary/20 transition-colors shrink-0 group">
+        <span class="block w-5 h-[2px] bg-slate-600 dark:bg-primary rounded-full group-hover:bg-primary transition-colors"></span>
+        <span class="block w-5 h-[2px] bg-slate-600 dark:bg-primary rounded-full group-hover:bg-primary transition-colors"></span>
+        <span class="block w-5 h-[2px] bg-slate-600 dark:bg-primary rounded-full group-hover:bg-primary transition-colors"></span>
+      </button>
+      <img src="" alt="Logo" class="h-10 w-auto object-contain"/>
     </div>
 
     <!-- Stats pill (desktop) -->
@@ -634,24 +704,24 @@ function doLogin() {
   ls.classList.add('fade-out');
   setTimeout(() => {
     ls.classList.add('hidden');
+    startRealtimeSync(); // inicia listener Firebase em tempo real
     if (role === 'entregador') {
       document.getElementById('deliverer-name').textContent = user;
       document.getElementById('deliverer-screen').classList.remove('hidden');
-      loadData(); renderDeliverer();
     } else {
       document.getElementById('dashboard').classList.remove('hidden');
-      loadData(); renderAll();
     }
   }, 380);
 }
 
 // ─── DELIVERER LOGOUT ────────────────────────────────────────────────────────
 function delivererLogout() {
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  deliveries = [];
   document.getElementById('deliverer-screen').classList.add('hidden');
   const ls = document.getElementById('login-screen');
   ls.classList.remove('hidden', 'fade-out');
   ls.style.opacity = '';
-  // Re-trigger animation
   ls.querySelector('.login-anim').style.animation = 'none';
   requestAnimationFrame(() => { ls.querySelector('.login-anim').style.animation = ''; });
 }
@@ -804,13 +874,10 @@ function buildDelivererMiniCard(d, muted = false) {
 function delivererConfirm(id) {
   const d = deliveries.find(x => x.id === id);
   if (!d) return;
-  d.status = 'done';
-  saveData();
+  updateDelivery(id, { status: 'done' });
   closeDelivererModal();
-  // Navega para histórico com card verde
   delivererTab = 'historico';
   setDelivererTab('historico');
-  if (!document.getElementById('dashboard').classList.contains('hidden')) renderAll();
   showToast(`Entrega de ${d.name} concluída!`, '✅');
 }
 
@@ -1031,17 +1098,62 @@ function handleDetailOverlay(e) {
   if (e.target === document.getElementById('delivery-detail-overlay')) closeDelivererModal();
 }
 
+// ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────
+// ⚠️  SUBSTITUA OS VALORES ABAIXO PELAS SUAS CREDENCIAIS DO FIREBASE CONSOLE
+//     Acesse: console.firebase.google.com → seu projeto → ⚙️ Configurações → Seus apps
+const firebaseConfig = {
+  apiKey:            "SUA_API_KEY",
+  authDomain:        "SEU_PROJETO.firebaseapp.com",
+  projectId:         "SEU_PROJETO_ID",
+  storageBucket:     "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId:             "SEU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COLLECTION = 'entregas';
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let deliveries = [];
 let selectedZone = null;
 let selectedMethod = null;
 let dragId = null;
 let deleteId = null;
-const STORAGE_KEY = 'ja_petshop_deliveries';
+let unsubscribe = null; // Firestore listener handle
 
-function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(deliveries)); }
-function loadData() { try { const r = localStorage.getItem(STORAGE_KEY); if (r) deliveries = JSON.parse(r); } catch(e) { deliveries = []; } }
-function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+// ─── FIRESTORE HELPERS ────────────────────────────────────────────────────────
+function saveDelivery(delivery) {
+  const { id, ...data } = delivery;
+  return db.collection(COLLECTION).doc(id).set(data);
+}
+
+function updateDelivery(id, fields) {
+  return db.collection(COLLECTION).doc(id).update(fields);
+}
+
+function deleteDelivery(id) {
+  return db.collection(COLLECTION).doc(id).delete();
+}
+
+function startRealtimeSync() {
+  if (unsubscribe) unsubscribe(); // limpa listener anterior se existir
+  unsubscribe = db.collection(COLLECTION)
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(snapshot => {
+      deliveries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Atualiza a tela que estiver visível
+      if (!document.getElementById('dashboard').classList.contains('hidden')) renderAll();
+      if (!document.getElementById('deliverer-screen').classList.contains('hidden')) renderDeliverer();
+    }, err => {
+      console.error('Firestore error:', err);
+      showToast('Erro de conexão com o banco de dados.', '⚠️');
+    });
+}
+
+function genId() {
+  return db.collection(COLLECTION).doc().id; // ID gerado pelo próprio Firestore
+}
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 function renderAll() {
@@ -1200,8 +1312,7 @@ function onDrop(e) {
   const newStatus = col.dataset.status;
   const d = deliveries.find(x => x.id === dragId);
   if (d && d.status !== newStatus) {
-    d.status = newStatus;
-    saveData(); renderAll();
+    updateDelivery(d.id, { status: newStatus });
     const labels = { pending:'Pendente', route:'Em Rota', done:'Concluída' };
     showToast(`Entrega movida para ${labels[newStatus]}`, '🔄');
   }
@@ -1209,10 +1320,7 @@ function onDrop(e) {
 
 // ─── MOVE ─────────────────────────────────────────────────────────────────────
 function moveCard(id, newStatus) {
-  const d = deliveries.find(x => x.id === id);
-  if (!d) return;
-  d.status = newStatus;
-  saveData(); renderAll();
+  updateDelivery(id, { status: newStatus });
   const labels = { pending:'Pendente', route:'Em Rota', done:'Concluída' };
   showToast(`Entrega movida para ${labels[newStatus]}`, newStatus === 'done' ? '✅' : '🔄');
 }
@@ -1230,8 +1338,8 @@ function closeConfirm() {
 }
 function confirmDelete() {
   if (!deleteId) return;
-  deliveries = deliveries.filter(x => x.id !== deleteId);
-  saveData(); renderAll(); closeConfirm();
+  deleteDelivery(deleteId);
+  closeConfirm();
   showToast('Entrega removida', '🗑️');
 }
 
@@ -1324,8 +1432,9 @@ function submitDelivery() {
   if (!value)          { showToast('Informe o valor!', '⚠️'); return; }
   if (!selectedMethod) { showToast('Selecione a forma de pagamento!', '⚠️'); return; }
 
-  deliveries.unshift({ id: genId(), status: 'pending', zone: selectedZone, name, phone, address, desc, value, paid, method: selectedMethod, createdAt: Date.now() });
-  saveData(); renderAll(); closeModal();
+  const delivery = { id: genId(), status: 'pending', zone: selectedZone, name, phone, address, desc, value, paid, method: selectedMethod, createdAt: Date.now() };
+  saveDelivery(delivery);
+  closeModal();
   showToast(`Entrega criada para ${name}!`, '✅');
 }
 
@@ -1344,20 +1453,88 @@ function showToast(msg, icon = '✅') {
   }, 2800);
 }
 
-// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeConfirm(); } });
+// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+function openSidebar() {
+  document.getElementById('sidebar-overlay').classList.remove('hidden');
+  requestAnimationFrame(() => {
+    document.getElementById('sidebar').style.transform = 'translateX(0)';
+  });
+}
 
-// ─── CROSS-TAB SYNC ───────────────────────────────────────────────────────────
-// When another tab (e.g. entregador) updates localStorage, sync the dashboard
-window.addEventListener('storage', e => {
-  if (e.key !== STORAGE_KEY) return;
-  loadData();
-  if (!document.getElementById('dashboard').classList.contains('hidden')) renderAll();
-  if (!document.getElementById('deliverer-screen').classList.contains('hidden')) renderDeliverer();
-});
+function closeSidebar() {
+  document.getElementById('sidebar').style.transform = 'translateX(-100%)';
+  setTimeout(() => {
+    document.getElementById('sidebar-overlay').classList.add('hidden');
+  }, 300);
+}
+
+function sidebarGeneratePDF() {
+  closeSidebar();
+  // Build PDF content from deliveries
+  const lines = [];
+  const now = new Date().toLocaleString('pt-BR');
+  lines.push('RELATÓRIO DE ENTREGAS — J.A PET SHOP');
+  lines.push(`Gerado em: ${now}`);
+  lines.push('─'.repeat(50));
+
+  const groups = { pending: 'PENDENTES', route: 'EM ROTA', done: 'CONCLUÍDAS' };
+  Object.entries(groups).forEach(([status, label]) => {
+    const list = deliveries.filter(d => d.status === status);
+    lines.push(`\n${label} (${list.length})`);
+    if (list.length === 0) {
+      lines.push('  Nenhuma entrega.');
+    } else {
+      list.forEach((d, i) => {
+        lines.push(`  ${i+1}. ${d.name} — ${d.address}`);
+        lines.push(`     Pedido: ${d.desc}`);
+        lines.push(`     Valor: R$ ${d.value} | ${d.paid ? 'Pago' : 'Pendente'} | ${d.method || '—'}`);
+        lines.push(`     Zona: ${d.zone === 'geisel' ? 'Geisel' : 'Valentina'}`);
+      });
+    }
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `relatorio_entregas_${Date.now()}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Relatório gerado com sucesso!', '📄');
+}
+
+function sidebarReportProblem() {
+  closeSidebar();
+  setTimeout(() => {
+    const msg = prompt('Descreva o problema ou ocorrência:');
+    if (msg && msg.trim()) {
+      showToast('Problema relatado. Obrigado!', '⚠️');
+    }
+  }, 350);
+}
+
+function sidebarLogout() {
+  closeSidebar();
+  setTimeout(() => {
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    deliveries = [];
+    document.getElementById('dashboard').classList.add('hidden');
+    const ls = document.getElementById('login-screen');
+    ls.classList.remove('hidden', 'fade-out');
+    ls.style.opacity = '';
+    const anim = ls.querySelector('.login-anim');
+    anim.style.animation = 'none';
+    requestAnimationFrame(() => { anim.style.animation = ''; });
+  }, 350);
+}
+
+// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeConfirm(); closeSidebar(); } });
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-loadData(); renderAll();
+// O listener do Firestore é iniciado após o login, em doLogin()
+// renderAll() aqui apenas para garantir UI limpa antes do login
+renderAll();
 </script>
 </body>
 </html>
