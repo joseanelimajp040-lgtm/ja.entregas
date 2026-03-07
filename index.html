@@ -454,6 +454,119 @@
         </button>
       </div>
     </nav>
+
+    <!-- ── MODAL DETALHES DA ENTREGA ── -->
+    <div id="delivery-detail-overlay" onclick="handleDetailOverlay(event)"
+      class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-20 flex items-end justify-center">
+      <div id="delivery-detail-modal"
+        class="w-full bg-background-light dark:bg-background-dark rounded-t-2xl border-t border-x border-primary/15 shadow-2xl flex flex-col max-h-[92%] overflow-hidden"
+        style="transform:translateY(100%); transition:transform 0.35s cubic-bezier(.32,.72,0,1)">
+
+        <!-- drag handle -->
+        <div class="flex justify-center pt-3 pb-1 shrink-0">
+          <div class="w-10 h-1 rounded-full bg-slate-300 dark:bg-primary/20"></div>
+        </div>
+
+        <!-- Modal header -->
+        <div class="flex items-center justify-between px-5 py-3 border-b border-primary/10 shrink-0">
+          <div>
+            <p id="dm-zone" class="text-xs font-bold uppercase tracking-widest text-primary mb-0.5"></p>
+            <h3 id="dm-name" class="text-xl font-bold"></h3>
+          </div>
+          <button onclick="closeDelivererModal()"
+            class="size-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-primary/10 text-slate-500 dark:text-primary/60 hover:text-slate-800 dark:hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        <!-- Scrollable body -->
+        <div class="overflow-y-auto custom-scrollbar flex flex-col gap-4 p-5">
+
+          <!-- MAP -->
+          <div class="relative rounded-xl overflow-hidden border border-primary/15 bg-slate-200 dark:bg-slate-800" style="height:180px">
+            <iframe id="dm-map" src="" class="w-full h-full border-0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa do endereço"></iframe>
+            <!-- overlay gradient bottom -->
+            <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background-dark/40 to-transparent pointer-events-none"></div>
+            <!-- address chip on map -->
+            <div class="absolute bottom-2 left-2 right-2">
+              <div class="flex items-center gap-2 bg-background-dark/80 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                <span class="material-symbols-outlined text-primary text-base shrink-0">location_on</span>
+                <p id="dm-address-chip" class="text-xs text-white truncate"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info cards row -->
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Phone -->
+            <a id="dm-phone-link" href="#"
+              class="flex items-center gap-2.5 p-3 rounded-xl bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10 hover:border-primary/40 transition-colors group">
+              <div class="size-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary text-lg">call</span>
+              </div>
+              <div class="min-w-0">
+                <p class="text-[10px] text-slate-400 dark:text-primary/50 uppercase font-bold">Telefone</p>
+                <p id="dm-phone" class="text-sm font-semibold truncate group-hover:text-primary transition-colors">—</p>
+              </div>
+            </a>
+            <!-- Payment status -->
+            <div id="dm-paid-card" class="flex items-center gap-2.5 p-3 rounded-xl border transition-colors">
+              <div id="dm-paid-icon-wrap" class="size-8 rounded-lg flex items-center justify-center shrink-0">
+                <span id="dm-paid-icon" class="material-symbols-outlined text-lg"></span>
+              </div>
+              <div>
+                <p class="text-[10px] uppercase font-bold text-slate-400 dark:text-primary/50">Pagamento</p>
+                <p id="dm-paid-label" class="text-sm font-bold"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order details -->
+          <div class="rounded-xl bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10 overflow-hidden">
+            <div class="flex items-center gap-2.5 px-4 py-3 border-b border-slate-200 dark:border-primary/10">
+              <span class="material-symbols-outlined text-primary text-lg">shopping_bag</span>
+              <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Pedido</p>
+            </div>
+            <div class="px-4 py-3">
+              <p id="dm-desc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed"></p>
+            </div>
+          </div>
+
+          <!-- Payment method + value -->
+          <div id="dm-payment-bar" class="flex items-center justify-between p-4 rounded-xl border">
+            <div class="flex items-center gap-3">
+              <span id="dm-method-icon" class="material-symbols-outlined text-2xl text-primary"></span>
+              <div>
+                <p class="text-xs uppercase font-bold text-slate-400 dark:text-primary/50">Forma de Pag.</p>
+                <p id="dm-method-label" class="text-sm font-bold"></p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-xs uppercase font-bold text-slate-400 dark:text-primary/50">Total</p>
+              <p id="dm-value" class="text-xl font-bold text-primary"></p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer actions -->
+        <div class="px-5 pb-5 pt-3 border-t border-primary/10 flex flex-col gap-3 shrink-0">
+          <a id="dm-maps-btn" href="#" target="_blank" rel="noopener"
+            class="w-full py-3.5 rounded-xl border-2 border-primary text-primary font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary hover:text-background-dark transition-all active:scale-[0.98]">
+            <span class="material-symbols-outlined text-lg">directions</span>
+            Abrir Rota no Google Maps
+          </a>
+          <button id="dm-confirm-btn" onclick=""
+            class="w-full py-3.5 rounded-xl bg-primary text-background-dark font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-[0.98]">
+            <span class="material-symbols-outlined text-lg">check_circle</span>
+            Confirmar Entrega
+          </button>
+        </div>
+
+      </div>
+    </div>
+    <!-- ── /MODAL ── -->
+
   </div>
 </div>
 
@@ -544,45 +657,20 @@ function renderDeliverer() {
       activeCard.innerHTML = `
         <h3 class="text-lg font-bold mb-3">Em Andamento</h3>
         <div class="bg-slate-50 dark:bg-primary/5 border border-primary/20 rounded-xl overflow-hidden shadow-sm">
-          <div class="p-4 border-b border-primary/10 flex justify-between items-start">
+          <div class="p-4 border-b border-primary/10 flex justify-between items-start cursor-pointer hover:bg-primary/5 transition-colors" onclick="openDelivererModal('${active.id}')">
             <div>
               <p class="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Em Rota · ${zoneLabel}</p>
               <h4 class="text-lg font-bold">${esc(active.name)}</h4>
+              <p class="text-xs text-slate-500 dark:text-primary/50 mt-0.5">${esc(active.address)}</p>
             </div>
-            <span class="text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-400/20 px-2 py-1 rounded-full">Em Trânsito</span>
+            <div class="flex flex-col items-end gap-2">
+              <span class="text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-400/20 px-2 py-1 rounded-full">Em Trânsito</span>
+              <span class="material-symbols-outlined text-primary/50 text-lg">open_in_full</span>
+            </div>
           </div>
-          <div class="p-4 space-y-4">
-            <div class="flex items-start justify-between gap-4">
-              <div class="flex gap-3">
-                <span class="material-symbols-outlined text-primary mt-0.5">map</span>
-                <p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">${esc(active.address)}</p>
-              </div>
-            </div>
-            ${active.phone ? `
-            <div class="flex items-center justify-between gap-4 border-t border-primary/10 pt-4">
-              <div class="flex gap-3 items-center">
-                <span class="material-symbols-outlined text-primary">call</span>
-                <p class="text-sm">${esc(active.phone)}</p>
-              </div>
-            </div>` : ''}
-            <div class="bg-white/50 dark:bg-background-dark/50 rounded-lg p-3 space-y-2">
-              <div class="flex justify-between items-center text-xs text-slate-500 dark:text-primary/60 uppercase font-bold">
-                <span>Produtos</span>
-              </div>
-              <p class="text-sm text-slate-700 dark:text-slate-200">${esc(active.desc)}</p>
-            </div>
-            <div class="flex justify-between items-center p-3 rounded-lg ${paidColor} border">
-              <div>
-                <p class="text-xs ${paidText} font-bold uppercase">Pagamento · ${methodLabel}</p>
-                <p class="font-bold">${paidLabel}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-xs text-slate-500 dark:text-primary/60 uppercase font-bold">Total</p>
-                <p class="text-lg font-bold text-primary">R$ ${esc(active.value)}</p>
-              </div>
-            </div>
+          <div class="p-4">
             <button onclick="delivererConfirm('${active.id}')"
-              class="w-full bg-primary hover:bg-primary/90 text-background-dark py-4 rounded-xl font-bold text-base shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2">
+              class="w-full bg-primary hover:bg-primary/90 text-background-dark py-3.5 rounded-xl font-bold text-sm shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2">
               <span class="material-symbols-outlined">check_circle</span>
               Confirmar Entrega
             </button>
@@ -645,7 +733,8 @@ function renderDeliverer() {
 
 function buildDelivererMiniCard(d, muted = false) {
   const el = document.createElement('div');
-  el.className = `card-anim p-4 rounded-xl bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10 flex items-center justify-between ${muted ? 'opacity-60' : ''}`;
+  el.className = `card-anim cursor-pointer p-4 rounded-xl bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10 flex items-center justify-between hover:border-primary/40 transition-all ${muted ? 'opacity-60' : ''}`;
+  el.onclick = () => openDelivererModal(d.id);
   el.innerHTML = `
     <div class="flex flex-col gap-0.5">
       <h5 class="font-bold">${esc(d.name)}</h5>
@@ -661,8 +750,112 @@ function delivererConfirm(id) {
   if (!d) return;
   d.status = 'done';
   saveData();
+  closeDelivererModal();
   renderDeliverer();
   showToast(`Entrega de ${d.name} concluída!`, '✅');
+}
+
+// ─── DELIVERY DETAIL MODAL ────────────────────────────────────────────────────
+const methodIcons  = { credito:'credit_card', debito:'payments', dinheiro:'account_balance_wallet', pix:'qr_code_2' };
+const methodLabels2 = { credito:'Crédito', debito:'Débito', dinheiro:'Dinheiro', pix:'PIX' };
+
+function openDelivererModal(id) {
+  const d = deliveries.find(x => x.id === id);
+  if (!d) return;
+
+  const zoneLabel   = d.zone === 'geisel' ? 'Geisel' : 'Valentina';
+  const methodLabel = d.method ? (methodLabels2[d.method] || d.method) : '—';
+  const methodIcon  = d.method ? (methodIcons[d.method] || 'payments') : 'payments';
+
+  // Text fields
+  document.getElementById('dm-name').textContent        = d.name;
+  document.getElementById('dm-zone').textContent        = `📍 ${zoneLabel}`;
+  document.getElementById('dm-address-chip').textContent = d.address;
+  document.getElementById('dm-desc').textContent        = d.desc;
+  document.getElementById('dm-value').textContent       = `R$ ${d.value}`;
+  document.getElementById('dm-method-label').textContent = methodLabel;
+  document.getElementById('dm-method-icon').textContent  = methodIcon;
+
+  // Phone
+  const phoneEl   = document.getElementById('dm-phone');
+  const phoneLinkEl = document.getElementById('dm-phone-link');
+  if (d.phone) {
+    phoneEl.textContent = d.phone;
+    phoneLinkEl.href = `tel:${d.phone.replace(/\D/g,'')}`;
+  } else {
+    phoneEl.textContent = 'Não informado';
+    phoneLinkEl.href = '#';
+  }
+
+  // Paid status
+  const paidCard     = document.getElementById('dm-paid-card');
+  const paidIconWrap = document.getElementById('dm-paid-icon-wrap');
+  const paidIcon     = document.getElementById('dm-paid-icon');
+  const paidLabel    = document.getElementById('dm-paid-label');
+  if (d.paid) {
+    paidCard.className     = 'flex items-center gap-2.5 p-3 rounded-xl border bg-green-500/10 border-green-500/20 transition-colors';
+    paidIconWrap.className = 'size-8 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0';
+    paidIcon.className     = 'material-symbols-outlined text-green-500 text-lg';
+    paidIcon.textContent   = 'check_circle';
+    paidLabel.className    = 'text-sm font-bold text-green-500';
+    paidLabel.textContent  = 'Pago';
+  } else {
+    paidCard.className     = 'flex items-center gap-2.5 p-3 rounded-xl border bg-orange-500/10 border-orange-500/20 transition-colors';
+    paidIconWrap.className = 'size-8 rounded-lg bg-orange-500/20 flex items-center justify-center shrink-0';
+    paidIcon.className     = 'material-symbols-outlined text-orange-500 text-lg';
+    paidIcon.textContent   = 'payments';
+    paidLabel.className    = 'text-sm font-bold text-orange-500';
+    paidLabel.textContent  = 'Na entrega';
+  }
+
+  // Payment bar color
+  const payBar = document.getElementById('dm-payment-bar');
+  payBar.className = d.paid
+    ? 'flex items-center justify-between p-4 rounded-xl border bg-slate-100 dark:bg-primary/5 border-slate-200 dark:border-primary/10'
+    : 'flex items-center justify-between p-4 rounded-xl border bg-orange-500/5 border-orange-500/20';
+
+  // Map — OpenStreetMap embed via nominatim search query
+  const mapQuery = encodeURIComponent(d.address + ', João Pessoa, PB, Brasil');
+  document.getElementById('dm-map').src =
+    `https://www.openstreetmap.org/export/embed.html?bbox=-35.2,-7.2,-34.8,-6.9&layer=mapnik&marker=0,0&query=${mapQuery}`;
+
+  // Google Maps route button
+  document.getElementById('dm-maps-btn').href =
+    `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d.address + ', João Pessoa, PB')}`;
+
+  // Confirm button — only show for route deliveries
+  const confirmBtn = document.getElementById('dm-confirm-btn');
+  if (d.status === 'route') {
+    confirmBtn.classList.remove('hidden');
+    confirmBtn.onclick = () => delivererConfirm(d.id);
+  } else {
+    confirmBtn.classList.add('hidden');
+  }
+
+  // Show overlay + slide up
+  const overlay = document.getElementById('delivery-detail-overlay');
+  const modal   = document.getElementById('delivery-detail-modal');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { modal.style.transform = 'translateY(0)'; });
+  });
+}
+
+function closeDelivererModal() {
+  const overlay = document.getElementById('delivery-detail-overlay');
+  const modal   = document.getElementById('delivery-detail-modal');
+  modal.style.transform = 'translateY(100%)';
+  setTimeout(() => {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+    // clear map src to stop loading
+    document.getElementById('dm-map').src = '';
+  }, 350);
+}
+
+function handleDetailOverlay(e) {
+  if (e.target === document.getElementById('delivery-detail-overlay')) closeDelivererModal();
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
