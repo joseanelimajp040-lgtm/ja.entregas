@@ -1482,198 +1482,188 @@ function sidebarGeneratePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  const primary   = [251, 178, 60];   // #fbb23c
-  const dark      = [35,  27,  15];   // background-dark
-  const white     = [255, 255, 255];
-  const gray      = [100, 100, 100];
-  const lightGray = [240, 240, 240];
-  const pageW     = 210;
-  const margin    = 14;
-  const contentW  = pageW - margin * 2;
-  const now       = new Date().toLocaleString('pt-BR');
+  const primary     = [251, 178, 60];
+  const primaryText = [120, 80, 0];
+  const black       = [30, 30, 30];
+  const gray        = [110, 110, 110];
+  const lightGray   = [245, 245, 245];
+  const white       = [255, 255, 255];
+  const pageW       = 210;
+  const margin      = 14;
+  const contentW    = pageW - margin * 2;
+  const now         = new Date().toLocaleString('pt-BR');
+  const methodLabels = { credito: 'Crédito', debito: 'Débito', dinheiro: 'Dinheiro', pix: 'PIX' };
+  const statusLabels = { pending: 'Pendentes', route: 'Em Rota', done: 'Concluídas' };
 
-  // ── HEADER ──────────────────────────────────────────────────────────────────
-  doc.setFillColor(...dark);
-  doc.rect(0, 0, pageW, 28, 'F');
-
-  doc.setFillColor(...primary);
-  doc.rect(0, 28, pageW, 2, 'F');
-
-  doc.setTextColor(...primary);
-  doc.setFontSize(18);
+  // ── TÍTULO ────────────────────────────────────────────────────────────────
+  let y = 18;
+  doc.setTextColor(...black);
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('J.A PET SHOP', margin, 12);
+  doc.text('Relatório de Entregas - J.A Pet Shop', margin, y);
 
+  y += 8;
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...white);
-  doc.text('Relatório de Entregas', margin, 20);
-  doc.text(`Gerado em: ${now}`, pageW - margin, 20, { align: 'right' });
+  doc.setTextColor(...gray);
+  doc.text(`Gerado em: ${now}`, margin, y);
 
-  // ── SUMMARY PILLS ────────────────────────────────────────────────────────────
-  let y = 40;
+  const total = deliveries.length;
+  const done  = deliveries.filter(d => d.status === 'done').length;
+  doc.text(`Total: ${total} entregas  |  Concluídas: ${done}  |  Pendentes: ${deliveries.filter(d=>d.status==='pending').length}  |  Em Rota: ${deliveries.filter(d=>d.status==='route').length}`, margin, y + 5);
+
+  y += 14;
+  // Linha separadora fina
+  doc.setDrawColor(...primary);
+  doc.setLineWidth(0.6);
+  doc.line(margin, y, pageW - margin, y);
+  y += 8;
+
+  // ── SEÇÕES ────────────────────────────────────────────────────────────────
   const groups = [
-    { status: 'pending', label: 'Pendentes',  color: [239, 68,  68],  icon: '●' },
-    { status: 'route',   label: 'Em Rota',    color: [59,  130, 246], icon: '●' },
-    { status: 'done',    label: 'Concluídas', color: [34,  197, 94],  icon: '●' },
+    { status: 'pending', label: 'Pendentes'  },
+    { status: 'route',   label: 'Em Rota'    },
+    { status: 'done',    label: 'Concluídas' },
   ];
 
-  const pillW = (contentW - 8) / 3;
-  groups.forEach((g, i) => {
-    const count = deliveries.filter(d => d.status === g.status).length;
-    const x = margin + i * (pillW + 4);
-
-    doc.setFillColor(...lightGray);
-    doc.roundedRect(x, y, pillW, 18, 3, 3, 'F');
-
-    doc.setFillColor(...g.color);
-    doc.circle(x + 6, y + 9, 2.5, 'F');
-
-    doc.setTextColor(...g.color);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text(String(count), x + 12, y + 11.5);
-
-    doc.setTextColor(...gray);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(g.label, x + 12, y + 16.5);
-  });
-
-  y += 28;
-
-  // ── SECTIONS ────────────────────────────────────────────────────────────────
-  const sectionColors = {
-    pending: { header: [239, 68, 68],  badge: [254, 226, 226], badgeText: [185, 28, 28] },
-    route:   { header: [59, 130, 246], badge: [219, 234, 254], badgeText: [29, 78, 216]  },
-    done:    { header: [34, 197, 94],  badge: [220, 252, 231], badgeText: [21, 128, 61]  },
-  };
-  const statusLabels = { pending: 'PENDENTES', route: 'EM ROTA', done: 'CONCLUÍDAS' };
-  const methodLabels = { credito: 'Crédito', debito: 'Débito', dinheiro: 'Dinheiro', pix: 'PIX' };
+  // Colunas da tabela
+  const cols = [
+    { header: 'Cliente',    key: 'name',    w: 38 },
+    { header: 'Endereço',   key: 'address', w: 48 },
+    { header: 'Pedido',     key: 'desc',    w: 38 },
+    { header: 'Valor',      key: 'value',   w: 18 },
+    { header: 'Pagamento',  key: 'method',  w: 20 },
+    { header: 'Pago',       key: 'paid',    w: 16 },
+  ];
 
   groups.forEach(g => {
     const list = deliveries.filter(d => d.status === g.status);
-    const sc   = sectionColors[g.status];
 
-    // Section header bar
-    doc.setFillColor(...sc.header);
-    doc.roundedRect(margin, y, contentW, 9, 2, 2, 'F');
-    doc.setTextColor(...white);
-    doc.setFontSize(9);
+    // Page break preventivo para o cabeçalho da seção
+    if (y + 30 > 280) { doc.addPage(); y = 14; }
+
+    // ── Cabeçalho da seção (estilo da imagem: texto colorido grande) ──
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${statusLabels[g.status]}  —  ${list.length} entrega${list.length !== 1 ? 's' : ''}`, margin + 4, y + 6);
-    y += 13;
+    doc.setTextColor(...primary);
+    doc.text(`${g.label}  (${list.length})`, margin, y);
+    y += 7;
+
+    // Linha fina abaixo do título da seção
+    doc.setDrawColor(...primary);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
 
     if (list.length === 0) {
-      doc.setTextColor(...gray);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'italic');
-      doc.text('Nenhuma entrega nesta categoria.', margin + 4, y + 4);
-      y += 12;
-    } else {
-      list.forEach((d, idx) => {
-        const cardH = 38;
+      doc.setTextColor(...gray);
+      doc.text('Nenhuma entrega nesta categoria.', margin + 2, y + 4);
+      y += 14;
+      return;
+    }
 
-        // Page break
-        if (y + cardH > 275) { doc.addPage(); y = 14; }
+    // ── Cabeçalho da tabela ───────────────────────────────────────────────
+    const rowH    = 7;
+    const headH   = 8;
+    let   xCursor = margin;
 
-        // Card background
-        doc.setFillColor(250, 250, 250);
-        doc.setDrawColor(220, 220, 220);
-        doc.roundedRect(margin, y, contentW, cardH, 2, 2, 'FD');
+    doc.setFillColor(...primary);
+    doc.roundedRect(margin, y, contentW, headH, 1, 1, 'F');
 
-        // Colored left accent bar
-        doc.setFillColor(...sc.header);
-        doc.roundedRect(margin, y, 2.5, cardH, 1, 1, 'F');
+    doc.setTextColor(...white);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    xCursor = margin;
+    cols.forEach(col => {
+      doc.text(col.header, xCursor + 2, y + 5.5);
+      xCursor += col.w;
+    });
+    y += headH;
 
-        // Index number
-        doc.setTextColor(...sc.header);
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`${idx + 1}`, margin + 6.5, y + 9);
-
-        // Name
-        doc.setTextColor(30, 30, 30);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        const nameMaxW = contentW - 60;
-        const nameTxt = doc.splitTextToSize(d.name, nameMaxW)[0];
-        doc.text(nameTxt, margin + 14, y + 9);
-
-        // Zone badge
-        const zoneLabel = d.zone === 'geisel' ? 'Geisel' : 'Valentina';
-        doc.setFillColor(...sc.badge);
-        doc.roundedRect(pageW - margin - 28, y + 3, 27, 6, 2, 2, 'F');
-        doc.setTextColor(...sc.badgeText);
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'bold');
-        doc.text(zoneLabel, pageW - margin - 14.5, y + 7.5, { align: 'center' });
-
-        // Address
-        doc.setTextColor(...gray);
+    // ── Linhas da tabela ─────────────────────────────────────────────────
+    list.forEach((d, idx) => {
+      if (y + rowH > 280) { 
+        doc.addPage(); 
+        y = 14;
+        // Repetir cabeçalho da tabela na nova página
+        doc.setFillColor(...primary);
+        doc.roundedRect(margin, y, contentW, headH, 1, 1, 'F');
+        doc.setTextColor(...white);
         doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        const addrTxt = doc.splitTextToSize(`📍 ${d.address}`, contentW - 20)[0];
-        doc.text(addrTxt, margin + 14, y + 15);
-
-        // Order description
-        doc.setTextColor(60, 60, 60);
-        const descTxt = doc.splitTextToSize(`🛍 ${d.desc}`, contentW - 20)[0];
-        doc.text(descTxt, margin + 14, y + 21);
-
-        // Divider
-        doc.setDrawColor(230, 230, 230);
-        doc.line(margin + 4, y + 25, margin + contentW - 4, y + 25);
-
-        // Value
-        doc.setTextColor(...primary);
-        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text(`R$ ${d.value}`, margin + 6, y + 32);
+        xCursor = margin;
+        cols.forEach(col => { doc.text(col.header, xCursor + 2, y + 5.5); xCursor += col.w; });
+        y += headH;
+      }
 
-        // Payment method
-        doc.setTextColor(...gray);
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        const method = d.method ? (methodLabels[d.method] || d.method) : '—';
-        doc.text(`Pagamento: ${method}`, margin + 35, y + 32);
+      // Fundo alternado
+      if (idx % 2 === 0) {
+        doc.setFillColor(...lightGray);
+        doc.rect(margin, y, contentW, rowH, 'F');
+      } else {
+        doc.setFillColor(...white);
+        doc.rect(margin, y, contentW, rowH, 'F');
+      }
 
-        // Paid badge
-        const paidColor = d.paid ? [34, 197, 94] : [239, 68, 68];
-        const paidBg    = d.paid ? [220, 252, 231] : [254, 226, 226];
-        const paidLabel = d.paid ? 'PAGO' : 'PENDENTE';
-        doc.setFillColor(...paidBg);
-        doc.roundedRect(pageW - margin - 26, y + 27, 25, 7, 2, 2, 'F');
-        doc.setTextColor(...paidColor);
-        doc.setFontSize(7.5);
-        doc.setFont('helvetica', 'bold');
-        doc.text(paidLabel, pageW - margin - 13.5, y + 32, { align: 'center' });
+      // Borda inferior da linha
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.1);
+      doc.line(margin, y + rowH, margin + contentW, y + rowH);
 
-        // Phone (if available)
-        if (d.phone) {
-          doc.setTextColor(...gray);
-          doc.setFontSize(7.5);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...black);
+
+      xCursor = margin;
+      cols.forEach(col => {
+        let txt = '';
+        if (col.key === 'method') {
+          txt = d.method ? (methodLabels[d.method] || d.method) : '—';
+        } else if (col.key === 'paid') {
+          txt = d.paid ? 'Sim' : 'Não';
+          doc.setTextColor(d.paid ? 22 : 200, d.paid ? 163 : 30, d.paid ? 74 : 30);
+          doc.setFont('helvetica', 'bold');
+        } else if (col.key === 'value') {
+          txt = `R$ ${d[col.key]}`;
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...primaryText);
+        } else {
+          txt = String(d[col.key] || '—');
           doc.setFont('helvetica', 'normal');
-          doc.text(`☎ ${d.phone}`, margin + 85, y + 32);
+          doc.setTextColor(...black);
         }
 
-        y += cardH + 4;
+        // Truncar texto para caber na célula
+        const maxW = col.w - 4;
+        const fitted = doc.splitTextToSize(txt, maxW)[0];
+        doc.text(fitted, xCursor + 2, y + 5);
+
+        // Reset cores após cada célula
+        doc.setTextColor(...black);
+        doc.setFont('helvetica', 'normal');
+        xCursor += col.w;
       });
-    }
-    y += 4;
+
+      y += rowH;
+    });
+
+    y += 10;
   });
 
-  // ── FOOTER ────────────────────────────────────────────────────────────────────
+  // ── RODAPÉ ────────────────────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
-    doc.setFillColor(...lightGray);
-    doc.rect(0, 289, pageW, 8, 'F');
-    doc.setTextColor(...gray);
+    doc.setDrawColor(...primary);
+    doc.setLineWidth(0.4);
+    doc.line(margin, 287, pageW - margin, 287);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.text('© J.A Pet Shop — Relatório gerado automaticamente', margin, 294);
-    doc.text(`Página ${p} de ${totalPages}`, pageW - margin, 294, { align: 'right' });
+    doc.setTextColor(...gray);
+    doc.text('© J.A Pet Shop — Relatório gerado automaticamente', margin, 292);
+    doc.text(`Página ${p} de ${totalPages}`, pageW - margin, 292, { align: 'right' });
   }
 
   doc.save(`relatorio_entregas_${Date.now()}.pdf`);
