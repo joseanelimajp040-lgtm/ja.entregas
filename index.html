@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="J.A Entregas"/>
+<meta name="theme-color" content="#fbb23c"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -1535,6 +1543,50 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal
 // O listener do Firestore é iniciado após o login, em doLogin()
 // renderAll() aqui apenas para garantir UI limpa antes do login
 renderAll();
+</script>
+    <!-- OFFLINE BANNER -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ef4444;color:#fff;font-size:13px;font-weight:600;text-align:center;padding:8px 16px;">
+  Voce esta offline - dados sincronizados quando voltar a conexao.
+</div>
+
+<!-- PWA INSTALL BUTTON (adicione no header ao lado do botao Nova Entrega) -->
+<button id="pwa-install-btn" onclick="triggerInstall()" title="Instalar app"
+  style="display:none"
+  class="size-10 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors shrink-0">
+  <span class="material-symbols-outlined text-primary text-xl">install_mobile</span>
+</button>
+
+<!-- PWA SCRIPTS -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => { console.log('[PWA] SW:', reg.scope); setInterval(() => reg.update(), 60000); })
+      .catch(err => console.warn('[PWA] Falhou:', err));
+  });
+}
+const offlineBanner = document.getElementById('offline-banner');
+function updateOnlineStatus() { if(offlineBanner) offlineBanner.style.display = navigator.onLine ? 'none' : 'block'; }
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+  if (typeof showToast === 'function') showToast('App instalado!', 'P');
+});
+function triggerInstall() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => { deferredPrompt = null; const btn = document.getElementById('pwa-install-btn'); if(btn) btn.style.display='none'; });
+}
 </script>
 </body>
 </html>
