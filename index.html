@@ -15,6 +15,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
@@ -1478,39 +1479,207 @@ function closeSidebar() {
 
 function sidebarGeneratePDF() {
   closeSidebar();
-  // Build PDF content from deliveries
-  const lines = [];
-  const now = new Date().toLocaleString('pt-BR');
-  lines.push('RELATÓRIO DE ENTREGAS — J.A PET SHOP');
-  lines.push(`Gerado em: ${now}`);
-  lines.push('─'.repeat(50));
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  const groups = { pending: 'PENDENTES', route: 'EM ROTA', done: 'CONCLUÍDAS' };
-  Object.entries(groups).forEach(([status, label]) => {
-    const list = deliveries.filter(d => d.status === status);
-    lines.push(`\n${label} (${list.length})`);
-    if (list.length === 0) {
-      lines.push('  Nenhuma entrega.');
-    } else {
-      list.forEach((d, i) => {
-        lines.push(`  ${i+1}. ${d.name} — ${d.address}`);
-        lines.push(`     Pedido: ${d.desc}`);
-        lines.push(`     Valor: R$ ${d.value} | ${d.paid ? 'Pago' : 'Pendente'} | ${d.method || '—'}`);
-        lines.push(`     Zona: ${d.zone === 'geisel' ? 'Geisel' : 'Valentina'}`);
-      });
-    }
+  const primary   = [251, 178, 60];   // #fbb23c
+  const dark      = [35,  27,  15];   // background-dark
+  const white     = [255, 255, 255];
+  const gray      = [100, 100, 100];
+  const lightGray = [240, 240, 240];
+  const pageW     = 210;
+  const margin    = 14;
+  const contentW  = pageW - margin * 2;
+  const now       = new Date().toLocaleString('pt-BR');
+
+  // ── HEADER ──────────────────────────────────────────────────────────────────
+  doc.setFillColor(...dark);
+  doc.rect(0, 0, pageW, 28, 'F');
+
+  doc.setFillColor(...primary);
+  doc.rect(0, 28, pageW, 2, 'F');
+
+  doc.setTextColor(...primary);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('J.A PET SHOP', margin, 12);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...white);
+  doc.text('Relatório de Entregas', margin, 20);
+  doc.text(`Gerado em: ${now}`, pageW - margin, 20, { align: 'right' });
+
+  // ── SUMMARY PILLS ────────────────────────────────────────────────────────────
+  let y = 40;
+  const groups = [
+    { status: 'pending', label: 'Pendentes',  color: [239, 68,  68],  icon: '●' },
+    { status: 'route',   label: 'Em Rota',    color: [59,  130, 246], icon: '●' },
+    { status: 'done',    label: 'Concluídas', color: [34,  197, 94],  icon: '●' },
+  ];
+
+  const pillW = (contentW - 8) / 3;
+  groups.forEach((g, i) => {
+    const count = deliveries.filter(d => d.status === g.status).length;
+    const x = margin + i * (pillW + 4);
+
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(x, y, pillW, 18, 3, 3, 'F');
+
+    doc.setFillColor(...g.color);
+    doc.circle(x + 6, y + 9, 2.5, 'F');
+
+    doc.setTextColor(...g.color);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(count), x + 12, y + 11.5);
+
+    doc.setTextColor(...gray);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(g.label, x + 12, y + 16.5);
   });
 
-  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `relatorio_entregas_${Date.now()}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Relatório gerado com sucesso!', '📄');
-}
+  y += 28;
 
+  // ── SECTIONS ────────────────────────────────────────────────────────────────
+  const sectionColors = {
+    pending: { header: [239, 68, 68],  badge: [254, 226, 226], badgeText: [185, 28, 28] },
+    route:   { header: [59, 130, 246], badge: [219, 234, 254], badgeText: [29, 78, 216]  },
+    done:    { header: [34, 197, 94],  badge: [220, 252, 231], badgeText: [21, 128, 61]  },
+  };
+  const statusLabels = { pending: 'PENDENTES', route: 'EM ROTA', done: 'CONCLUÍDAS' };
+  const methodLabels = { credito: 'Crédito', debito: 'Débito', dinheiro: 'Dinheiro', pix: 'PIX' };
+
+  groups.forEach(g => {
+    const list = deliveries.filter(d => d.status === g.status);
+    const sc   = sectionColors[g.status];
+
+    // Section header bar
+    doc.setFillColor(...sc.header);
+    doc.roundedRect(margin, y, contentW, 9, 2, 2, 'F');
+    doc.setTextColor(...white);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${statusLabels[g.status]}  —  ${list.length} entrega${list.length !== 1 ? 's' : ''}`, margin + 4, y + 6);
+    y += 13;
+
+    if (list.length === 0) {
+      doc.setTextColor(...gray);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Nenhuma entrega nesta categoria.', margin + 4, y + 4);
+      y += 12;
+    } else {
+      list.forEach((d, idx) => {
+        const cardH = 38;
+
+        // Page break
+        if (y + cardH > 275) { doc.addPage(); y = 14; }
+
+        // Card background
+        doc.setFillColor(250, 250, 250);
+        doc.setDrawColor(220, 220, 220);
+        doc.roundedRect(margin, y, contentW, cardH, 2, 2, 'FD');
+
+        // Colored left accent bar
+        doc.setFillColor(...sc.header);
+        doc.roundedRect(margin, y, 2.5, cardH, 1, 1, 'F');
+
+        // Index number
+        doc.setTextColor(...sc.header);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${idx + 1}`, margin + 6.5, y + 9);
+
+        // Name
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        const nameMaxW = contentW - 60;
+        const nameTxt = doc.splitTextToSize(d.name, nameMaxW)[0];
+        doc.text(nameTxt, margin + 14, y + 9);
+
+        // Zone badge
+        const zoneLabel = d.zone === 'geisel' ? 'Geisel' : 'Valentina';
+        doc.setFillColor(...sc.badge);
+        doc.roundedRect(pageW - margin - 28, y + 3, 27, 6, 2, 2, 'F');
+        doc.setTextColor(...sc.badgeText);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.text(zoneLabel, pageW - margin - 14.5, y + 7.5, { align: 'center' });
+
+        // Address
+        doc.setTextColor(...gray);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        const addrTxt = doc.splitTextToSize(`📍 ${d.address}`, contentW - 20)[0];
+        doc.text(addrTxt, margin + 14, y + 15);
+
+        // Order description
+        doc.setTextColor(60, 60, 60);
+        const descTxt = doc.splitTextToSize(`🛍 ${d.desc}`, contentW - 20)[0];
+        doc.text(descTxt, margin + 14, y + 21);
+
+        // Divider
+        doc.setDrawColor(230, 230, 230);
+        doc.line(margin + 4, y + 25, margin + contentW - 4, y + 25);
+
+        // Value
+        doc.setTextColor(...primary);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`R$ ${d.value}`, margin + 6, y + 32);
+
+        // Payment method
+        doc.setTextColor(...gray);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        const method = d.method ? (methodLabels[d.method] || d.method) : '—';
+        doc.text(`Pagamento: ${method}`, margin + 35, y + 32);
+
+        // Paid badge
+        const paidColor = d.paid ? [34, 197, 94] : [239, 68, 68];
+        const paidBg    = d.paid ? [220, 252, 231] : [254, 226, 226];
+        const paidLabel = d.paid ? 'PAGO' : 'PENDENTE';
+        doc.setFillColor(...paidBg);
+        doc.roundedRect(pageW - margin - 26, y + 27, 25, 7, 2, 2, 'F');
+        doc.setTextColor(...paidColor);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text(paidLabel, pageW - margin - 13.5, y + 32, { align: 'center' });
+
+        // Phone (if available)
+        if (d.phone) {
+          doc.setTextColor(...gray);
+          doc.setFontSize(7.5);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`☎ ${d.phone}`, margin + 85, y + 32);
+        }
+
+        y += cardH + 4;
+      });
+    }
+    y += 4;
+  });
+
+  // ── FOOTER ────────────────────────────────────────────────────────────────────
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...lightGray);
+    doc.rect(0, 289, pageW, 8, 'F');
+    doc.setTextColor(...gray);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('© J.A Pet Shop — Relatório gerado automaticamente', margin, 294);
+    doc.text(`Página ${p} de ${totalPages}`, pageW - margin, 294, { align: 'right' });
+  }
+
+  doc.save(`relatorio_entregas_${Date.now()}.pdf`);
+  showToast('Relatório PDF gerado!', '📄');
+}
+  
 function sidebarReportProblem() {
   closeSidebar();
   setTimeout(() => {
