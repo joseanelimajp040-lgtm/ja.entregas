@@ -953,6 +953,8 @@ function attachLongPress(el, id) {
 
   const tap = (e) => {
     if (isLongPress) return; // block click after long press
+    const delivery = deliveries.find(x => x.id === id);
+    if (!delivery || delivery.status === 'pending') return; // bloqueia pendentes
     openDelivererModal(id);
   };
 
