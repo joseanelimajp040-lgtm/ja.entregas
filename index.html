@@ -1189,30 +1189,39 @@ function genId() {
   return db.collection(COLLECTION).doc().id; // ID gerado pelo próprio Firestore
 }
 // Configurações da Z-API
-const ZAPI_INSTANCE = "3EFD847C1AC42124D2F56237BF5854B6";
-const ZAPI_TOKEN = "515E6E362E026ADD505337F3";
+const ZAPI_INSTANCE = "3EFD847C1AC42124D2F56237BF5854B6"; // ID da instância
+const ZAPI_TOKEN = "515E6E362E026ADD505337F3"; // Token da instância (que vai na URL)
+const ZAPI_CLIENT_TOKEN = "F67443d528b8d41a385d6534108f6379aS"; // <-- COLE SEU CLIENT-TOKEN AQUI
 
-// Função para disparar a mensagem via Z-API
 async function enviarNotificacaoZApi(telefone, mensagem) {
   if (!telefone) return;
 
-  // Limpa a máscara do seu input (Ex: (83) 9 9999-9999 -> 5583999999999)
   const numeroLimpo = "55" + telefone.replace(/\D/g, '');
-
   const url = `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`;
 
   try {
-    await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Client-Token': ZAPI_CLIENT_TOKEN // Enviando o token de segurança exigido
+      },
       body: JSON.stringify({
         phone: numeroLimpo,
         message: mensagem
       })
     });
-    console.log("Notificação enviada para:", numeroLimpo);
+
+    const data = await response.json();
+    
+    if (response.ok) {
+        console.log("✅ Mensagem enviada com sucesso para:", numeroLimpo);
+    } else {
+        console.error("❌ Erro da Z-API:", data);
+    }
+
   } catch (error) {
-    console.error("Erro ao enviar Z-API:", error);
+    console.error("❌ Erro na requisição:", error);
   }
 }
 // ─── RENDER ───────────────────────────────────────────────────────────────────
