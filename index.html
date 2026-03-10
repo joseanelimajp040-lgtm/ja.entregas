@@ -164,6 +164,17 @@
   <!-- Menu items -->
   <nav class="flex-1 px-3 py-4 flex flex-col gap-1">
 
+  <button onclick="openMapa(); closeSidebar();"
+  class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium text-sm text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-all group">
+  <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+    <span class="material-symbols-outlined text-primary text-lg">location_on</span>
+  </div>
+  <div>
+    <p class="font-semibold">Rastrear Motoboy</p>
+    <p class="text-xs text-slate-400 dark:text-primary/40 font-normal">Ver localização em tempo real</p>
+  </div>
+</button>
+    
     <button onclick="sidebarGeneratePDF()"
       class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium text-sm text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-all group">
       <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -483,6 +494,51 @@
   </div>
 </div>
 
+<!-- ═══════════════════════ MODAL MAPA MOTOBOY ═══════════════════════ -->
+<div id="mapa-overlay" onclick="handleMapaOverlay(event)"
+  class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="modal-anim relative w-full max-w-2xl bg-background-light dark:bg-background-dark border border-primary/10 rounded-xl shadow-2xl overflow-hidden flex flex-col" style="height: 520px;">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between p-5 border-b border-primary/10 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary text-lg">two_wheeler</span>
+        </div>
+        <div>
+          <h2 class="font-bold text-lg">Localização do Motoboy</h2>
+          <div class="flex items-center gap-1.5">
+            <span id="mapa-status-dot" class="size-2 rounded-full bg-slate-400 inline-block"></span>
+            <span id="mapa-status-txt" class="text-xs text-slate-400">Aguardando sinal GPS...</span>
+          </div>
+        </div>
+      </div>
+      <button onclick="closeMapa()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Mapa -->
+    <div class="flex-1 relative">
+      <div id="leaflet-map" class="w-full h-full"></div>
+      <!-- Offline/sem sinal -->
+      <div id="mapa-no-signal" class="hidden absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-100 dark:bg-background-dark text-slate-400">
+        <span class="material-symbols-outlined text-5xl opacity-30">location_off</span>
+        <p class="text-sm font-medium">Motoboy ainda não iniciou o rastreamento</p>
+        <p class="text-xs opacity-60">O GPS é ativado quando ele faz login</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="mapa-footer" class="hidden px-5 py-3 border-t border-primary/10 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0 bg-slate-50 dark:bg-primary/5">
+      <span id="mapa-nome-motoboy" class="font-semibold"></span>
+      <span id="mapa-ultima-atualizacao"></span>
+      <span id="mapa-precisao"></span>
+    </div>
+
+  </div>
+</div>
+  
 </div><!-- end #dashboard -->
 
 <!-- ═══════════════════════ TOAST (global) ═══════════════════════ -->
@@ -845,8 +901,9 @@ function doLogin() {
     ls.classList.add('hidden');
     startRealtimeSync(); // inicia listener Firebase em tempo real
     if (role === 'entregador') {
-      document.getElementById('deliverer-name').textContent = user;
-      document.getElementById('deliverer-screen').classList.remove('hidden');
+  document.getElementById('deliverer-name').textContent = user;
+  document.getElementById('deliverer-screen').classList.remove('hidden');
+  startGPSTracking(user);
     } else {
       document.getElementById('dashboard').classList.remove('hidden');
     }
@@ -855,6 +912,7 @@ function doLogin() {
 
 // ─── DELIVERER LOGOUT ────────────────────────────────────────────────────────
 function delivererLogout() {
+  stopGPSTracking(); // ← ADICIONE ESTA LINHA
   if (unsubscribe) { unsubscribe(); unsubscribe = null; }
   deliveries = [];
   document.getElementById('deliverer-screen').classList.add('hidden');
@@ -1959,6 +2017,125 @@ function triggerInstall() {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(() => { deferredPrompt = null; const btn = document.getElementById('pwa-install-btn'); if(btn) btn.style.display='none'; });
+}
+</script>
+<!-- Leaflet CSS + JS (OpenStreetMap - gratuito) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// ─── MAPA MOTOBOY ─────────────────────────────────────────────────────────────
+let mapaLeaflet     = null;
+let mapaMarker      = null;
+let mapaUnsubscribe = null;
+
+function openMapa() {
+  const overlay = document.getElementById('mapa-overlay');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+
+  // Inicializa o mapa Leaflet apenas uma vez
+  if (!mapaLeaflet) {
+    mapaLeaflet = L.map('leaflet-map', { zoomControl: true }).setView([-7.115, -34.861], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19
+    }).addTo(mapaLeaflet);
+  }
+
+  // Escuta a localização do motoboy no Firestore em tempo real
+  mapaUnsubscribe = db.collection('localizacoes').doc('motoboy')
+    .onSnapshot(doc => {
+      if (!doc.exists) {
+        document.getElementById('mapa-no-signal').classList.remove('hidden');
+        document.getElementById('mapa-footer').classList.add('hidden');
+        document.getElementById('mapa-status-dot').className = 'size-2 rounded-full bg-slate-400 inline-block';
+        document.getElementById('mapa-status-txt').textContent = 'Motoboy offline';
+        return;
+      }
+
+      const { lat, lng, nome, atualizado, precisao } = doc.data();
+      document.getElementById('mapa-no-signal').classList.add('hidden');
+      document.getElementById('mapa-footer').classList.remove('hidden');
+      document.getElementById('mapa-status-dot').className = 'size-2 rounded-full bg-green-500 inline-block animate-pulse';
+      document.getElementById('mapa-status-txt').textContent = 'Online · Rastreando em tempo real';
+      document.getElementById('mapa-nome-motoboy').textContent = `🛵 ${nome || 'Motoboy'}`;
+      document.getElementById('mapa-precisao').textContent = precisao ? `±${Math.round(precisao)}m` : '';
+      document.getElementById('mapa-ultima-atualizacao').textContent = atualizado
+        ? `Atualizado: ${new Date(atualizado).toLocaleTimeString('pt-BR')}`
+        : '';
+
+      const latlng = [lat, lng];
+
+      // Ícone personalizado do motoboy
+      const motoIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+          background:#fbb23c;
+          border:3px solid #fff;
+          border-radius:50%;
+          width:38px;height:38px;
+          display:flex;align-items:center;justify-content:center;
+          box-shadow:0 2px 12px rgba(251,178,60,0.6);
+          font-size:20px;">🛵</div>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
+      });
+
+      if (!mapaMarker) {
+        mapaMarker = L.marker(latlng, { icon: motoIcon }).addTo(mapaLeaflet);
+        mapaMarker.bindPopup(`<b>${nome || 'Motoboy'}</b><br>Última atualização: ${new Date(atualizado).toLocaleTimeString('pt-BR')}`);
+      } else {
+        mapaMarker.setLatLng(latlng);
+        mapaMarker.setPopupContent(`<b>${nome || 'Motoboy'}</b><br>Última atualização: ${new Date(atualizado).toLocaleTimeString('pt-BR')}`);
+      }
+
+      mapaLeaflet.setView(latlng, 16);
+    });
+}
+
+function closeMapa() {
+  const overlay = document.getElementById('mapa-overlay');
+  overlay.classList.add('hidden');
+  overlay.classList.remove('flex');
+  if (mapaUnsubscribe) { mapaUnsubscribe(); mapaUnsubscribe = null; }
+}
+
+function handleMapaOverlay(e) {
+  if (e.target === document.getElementById('mapa-overlay')) closeMapa();
+}
+
+// ─── GPS MOTOBOY (captura e envia localização para o Firestore) ───────────────
+let gpsWatchId = null;
+
+function startGPSTracking(nome) {
+  if (!navigator.geolocation) {
+    showToast('GPS não disponível neste dispositivo', '⚠️');
+    return;
+  }
+  // Pede permissão e inicia rastreamento contínuo
+  gpsWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      db.collection('localizacoes').doc('motoboy').set({
+        nome:      nome,
+        lat:       pos.coords.latitude,
+        lng:       pos.coords.longitude,
+        precisao:  pos.coords.accuracy,
+        atualizado: Date.now()
+      });
+    },
+    err => console.warn('[GPS]', err.message),
+    { enableHighAccuracy: true, maximumAge: 4000, timeout: 12000 }
+  );
+}
+
+function stopGPSTracking() {
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+  // Remove a localização do Firestore ao deslogar
+  db.collection('localizacoes').doc('motoboy').delete().catch(() => {});
 }
 </script>
 </body>
