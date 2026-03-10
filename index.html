@@ -583,6 +583,21 @@
         </div>
         <span class="text-xs font-bold bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg">Entregador</span>
       </div>
+      <!-- Botão GPS -->
+<div id="gps-status-bar" class="mx-4 mt-3 p-3 rounded-xl border border-dashed border-slate-300 dark:border-primary/20 flex items-center justify-between gap-3">
+  <div class="flex items-center gap-2">
+    <span id="gps-icon" class="material-symbols-outlined text-slate-400 text-xl">location_off</span>
+    <div>
+      <p id="gps-label" class="text-sm font-semibold text-slate-500 dark:text-slate-400">GPS desativado</p>
+      <p id="gps-sub" class="text-xs text-slate-400 dark:text-primary/40">Toque para ativar rastreamento</p>
+    </div>
+  </div>
+  <button id="gps-toggle-btn" onclick="toggleGPS()"
+    class="px-4 py-2 rounded-lg bg-primary text-background-dark font-bold text-xs flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all">
+    <span class="material-symbols-outlined text-sm">my_location</span>
+    Ativar GPS
+  </button>
+</div>
     </header>
 
     <!-- Main scrollable -->
@@ -903,7 +918,6 @@ function doLogin() {
     if (role === 'entregador') {
   document.getElementById('deliverer-name').textContent = user;
   document.getElementById('deliverer-screen').classList.remove('hidden');
-  startGPSTracking(user);
     } else {
       document.getElementById('dashboard').classList.remove('hidden');
     }
@@ -2108,25 +2122,70 @@ function handleMapaOverlay(e) {
 // ─── GPS MOTOBOY (captura e envia localização para o Firestore) ───────────────
 let gpsWatchId = null;
 
+// ─── GPS MOTOBOY ──────────────────────────────────────────────────────────────
+let gpsWatchId  = null;
+let gpsNomeAtivo = null;
+
+function toggleGPS() {
+  if (gpsWatchId !== null) {
+    stopGPSTracking();
+  } else {
+    // Pega o nome atual do entregador
+    const nome = document.getElementById('deliverer-name').textContent || 'Motoboy';
+    startGPSTracking(nome);
+  }
+}
+
 function startGPSTracking(nome) {
   if (!navigator.geolocation) {
     showToast('GPS não disponível neste dispositivo', '⚠️');
     return;
   }
-  // Pede permissão e inicia rastreamento contínuo
-  gpsWatchId = navigator.geolocation.watchPosition(
-    pos => {
-      db.collection('localizacoes').doc('motoboy').set({
-        nome:      nome,
-        lat:       pos.coords.latitude,
-        lng:       pos.coords.longitude,
-        precisao:  pos.coords.accuracy,
-        atualizado: Date.now()
-      });
+
+  gpsNomeAtivo = nome;
+
+  // Atualiza UI para "solicitando..."
+  setGpsUI('requesting');
+
+  navigator.geolocation.getCurrentPosition(
+    // Sucesso na primeira leitura → inicia watchPosition
+    (pos) => {
+      setGpsUI('active');
+      enviarPosicao(pos, nome);
+
+      gpsWatchId = navigator.geolocation.watchPosition(
+        (p) => enviarPosicao(p, nome),
+        (err) => {
+          console.warn('[GPS watch]', err.message);
+          setGpsUI('error');
+        },
+        { enableHighAccuracy: true, maximumAge: 4000, timeout: 15000 }
+      );
     },
-    err => console.warn('[GPS]', err.message),
-    { enableHighAccuracy: true, maximumAge: 4000, timeout: 12000 }
+    // Erro na permissão
+    (err) => {
+      console.warn('[GPS]', err.message);
+      if (err.code === 1) {
+        // Permissão negada
+        showToast('Permissão de GPS negada. Verifique as configurações do navegador.', '❌');
+        setGpsUI('denied');
+      } else {
+        showToast('Não foi possível obter o GPS. Tente novamente.', '⚠️');
+        setGpsUI('error');
+      }
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
   );
+}
+
+function enviarPosicao(pos, nome) {
+  db.collection('localizacoes').doc('motoboy').set({
+    nome:       nome,
+    lat:        pos.coords.latitude,
+    lng:        pos.coords.longitude,
+    precisao:   pos.coords.accuracy,
+    atualizado: Date.now()
+  });
 }
 
 function stopGPSTracking() {
@@ -2134,9 +2193,31 @@ function stopGPSTracking() {
     navigator.geolocation.clearWatch(gpsWatchId);
     gpsWatchId = null;
   }
-  // Remove a localização do Firestore ao deslogar
   db.collection('localizacoes').doc('motoboy').delete().catch(() => {});
+  setGpsUI('inactive');
 }
-</script>
-</body>
-</html>
+
+function setGpsUI(state) {
+  const icon  = document.getElementById('gps-icon');
+  const label = document.getElementById('gps-label');
+  const sub   = document.getElementById('gps-sub');
+  const btn   = document.getElementById('gps-toggle-btn');
+  const bar   = document.getElementById('gps-status-bar');
+
+  const states = {
+    inactive:   { icon: 'location_off',  iconColor: 'text-slate-400', label: 'GPS desativado',    sub: 'Toque para ativar rastreamento', btnTxt: 'Ativar GPS',   btnColor: 'bg-primary',   border: 'border-slate-300 dark:border-primary/20' },
+    requesting: { icon: 'my_location',   iconColor: 'text-primary',   label: 'Solicitando GPS…',  sub: 'Aguarde a permissão',           btnTxt: 'Aguarde…',    btnColor: 'bg-primary/50', border: 'border-primary/30' },
+    active:     { icon: 'location_on',   iconColor: 'text-green-500', label: 'GPS ativo',         sub: 'Enviando localização em tempo real', btnTxt: 'Desativar', btnColor: 'bg-red-500',   border: 'border-green-500/40' },
+    error:      { icon: 'location_off',  iconColor: 'text-orange-400',label: 'Erro no GPS',       sub: 'Toque para tentar novamente',   btnTxt: 'Tentar de novo', btnColor: 'bg-primary', border: 'border-orange-400/30' },
+    denied:     { icon: 'gps_off',       iconColor: 'text-red-400',   label: 'GPS bloqueado',     sub: 'Libere nas configurações do navegador', btnTxt: 'Ativar GPS', btnColor: 'bg-primary', border: 'border-red-400/30' },
+  };
+
+  const s = states[state] || states.inactive;
+  icon.className  = `material-symbols-outlined text-xl ${s.iconColor}`;
+  icon.textContent = s.icon;
+  label.textContent = s.label;
+  sub.textContent   = s.sub;
+  btn.innerHTML     = `<span class="material-symbols-outlined text-sm">my_location</span> ${s.btnTxt}`;
+  btn.className     = `px-4 py-2 rounded-lg ${s.btnColor} text-white font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all`;
+  bar.className     = `mx-4 mt-3 p-3 rounded-xl border border-dashed ${s.border} flex items-center justify-between gap-3`;
+}
