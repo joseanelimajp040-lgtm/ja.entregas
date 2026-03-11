@@ -524,10 +524,16 @@
           </div>
         </div>
       </div>
-      <button onclick="closeMapa()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-    </div>
+      <div class="flex items-center gap-2">
+  <button onclick="desconectarMotoboy()"
+    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-400/20 text-red-400 hover:bg-red-500/20 text-xs font-bold transition-colors">
+    <span class="material-symbols-outlined text-sm">link_off</span>
+    Desconectar
+  </button>
+  <button onclick="closeMapa()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+    <span class="material-symbols-outlined">close</span>
+  </button>
+</div>
 
     <!-- Mapa -->
     <div class="flex-1 relative">
@@ -2349,6 +2355,18 @@ function closeMapa() {
   overlay.classList.add('hidden');
   overlay.classList.remove('flex');
   if (mapaUnsubscribe) { mapaUnsubscribe(); mapaUnsubscribe = null; }
+}
+
+function desconectarMotoboy() {
+  if (!confirm('Desconectar o motoboy atual? Isso liberará o rastreamento para outro aparelho.')) return;
+  db.collection('localizacoes').doc('motoboy').delete()
+    .then(() => {
+      showToast('Motoboy desconectado com sucesso!', '🔌');
+    })
+    .catch(err => {
+      console.error('Erro ao desconectar:', err);
+      showToast('Erro ao desconectar. Tente novamente.', '⚠️');
+    });
 }
 
 function handleMapaOverlay(e) {
