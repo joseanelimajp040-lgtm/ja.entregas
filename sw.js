@@ -1,5 +1,5 @@
 // ─── SERVICE WORKER — J.A Pet Shop PWA ───────────────────────────────────────
-const CACHE_NAME   = 'ja-petshop-v1';
+const CACHE_NAME = 'ja-petshop-' + Date.now();
 const STATIC_ASSETS = [
   './index.html',
   './manifest.json',
@@ -29,9 +29,8 @@ self.addEventListener('activate', event => {
       Promise.all(
         keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 // ── FETCH: network-first for Firebase/API, cache-first for static/CDN ────────
@@ -54,22 +53,20 @@ self.addEventListener('fetch', event => {
   if (CDN_HOSTS.some(h => url.hostname.includes(h)) ||
       url.origin === self.location.origin) {
     event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          // Only cache valid responses
+      fetch(event.request)
+        .then(response => {
           if (!response || response.status !== 200 || response.type === 'opaque') {
             return response;
           }
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           return response;
-        });
-      })
+        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }
-
+  
   // Default: network only
   event.respondWith(fetch(event.request));
 });
