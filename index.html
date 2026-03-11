@@ -2411,5 +2411,24 @@ function stopGPSTracking() {
   db.collection('localizacoes').doc('motoboy').delete().catch(() => {});
 }
 </script>
+<script>
+  // Força o Service Worker a atualizar e recarregar ao detectar nova versão
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
+
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            console.log('[SW] Nova versão ativada, recarregando...');
+          }
+        });
+      });
+    });
+  }
+</script>
 </body>
 </html>
