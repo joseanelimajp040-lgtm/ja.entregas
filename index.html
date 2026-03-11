@@ -2363,19 +2363,42 @@ function startGPSTracking(nome) {
     showToast('GPS não disponível neste dispositivo', '⚠️');
     return;
   }
-  // Pede permissão e inicia rastreamento contínuo
-  gpsWatchId = navigator.geolocation.watchPosition(
-    pos => {
-      db.collection('localizacoes').doc('motoboy').set({
-        nome:      nome,
-        lat:       pos.coords.latitude,
-        lng:       pos.coords.longitude,
-        precisao:  pos.coords.accuracy,
-        atualizado: Date.now()
-      });
+
+  showToast('Solicitando permissão de GPS...', '📍');
+
+  // PASSO 1: getCurrentPosition aciona o popup de permissão no iOS e Android
+  navigator.geolocation.getCurrentPosition(
+    function() {
+      // Permissão concedida — inicia rastreamento contínuo
+      showToast('GPS ativado! Rastreando localização.', '✅');
+
+      gpsWatchId = navigator.geolocation.watchPosition(
+        function(pos) {
+          db.collection('localizacoes').doc('motoboy').set({
+            nome:       nome,
+            lat:        pos.coords.latitude,
+            lng:        pos.coords.longitude,
+            precisao:   pos.coords.accuracy,
+            atualizado: Date.now()
+          });
+        },
+        function(err) {
+          console.warn('[GPS watch]', err.code, err.message);
+          if (err.code === 1) showToast('GPS negado nas configurações.', '⚠️');
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
+      );
     },
-    err => console.warn('[GPS]', err.message),
-    { enableHighAccuracy: true, maximumAge: 4000, timeout: 12000 }
+    function(err) {
+      console.warn('[GPS permissão]', err.code, err.message);
+      const msgs = {
+        1: 'Permissão de GPS negada. Ative nas configurações do celular.',
+        2: 'Sinal de GPS indisponível. Verifique se o GPS está ativado.',
+        3: 'GPS demorou demais. Verifique o sinal e tente novamente.'
+      };
+      showToast(msgs[err.code] || 'Erro ao acessar o GPS.', '⚠️');
+    },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
   );
 }
 
