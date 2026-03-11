@@ -174,6 +174,17 @@
     <p class="text-xs text-slate-400 dark:text-primary/40 font-normal">Ver localização em tempo real</p>
   </div>
 </button>
+
+<button onclick="openClientHistory(); closeSidebar();"
+  class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium text-sm text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-all group">
+  <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+    <span class="material-symbols-outlined text-primary text-lg">group</span>
+  </div>
+  <div>
+    <p class="font-semibold">Histórico de Clientes</p>
+    <p class="text-xs text-slate-400 dark:text-primary/40 font-normal">Últimos 30 dias</p>
+  </div>
+</button>
     
     <button onclick="sidebarGeneratePDF()"
       class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left font-medium text-sm text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-all group">
@@ -538,6 +549,73 @@
 
   </div>
 </div>
+
+<!-- ═══════════════════════ MODAL HISTÓRICO DE CLIENTES ═══════════════════════ -->
+<div id="client-history-overlay" onclick="handleClientHistoryOverlay(event)"
+  class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="modal-anim relative w-full max-w-lg bg-background-light dark:bg-background-dark border border-primary/10 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between p-5 border-b border-primary/10 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary text-lg">group</span>
+        </div>
+        <div>
+          <h2 class="font-bold text-lg">Histórico de Clientes</h2>
+          <p class="text-xs text-slate-400 dark:text-primary/40">Clientes dos últimos 30 dias</p>
+        </div>
+      </div>
+      <button onclick="closeClientHistory()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="px-5 pt-4 pb-2 shrink-0">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+        <input id="client-search-input" type="text" placeholder="Buscar por nome ou telefone..."
+          oninput="filterClientHistory()"
+          class="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-lg outline-none focus:ring-2 focus:ring-primary text-sm dark:text-white placeholder:text-slate-400"/>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="client-history-list" class="flex-1 overflow-y-auto custom-scrollbar px-5 py-3 flex flex-col gap-3">
+      <!-- preenchido por JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MODAL AUTOPREENCHIMENTO ═══════════════════════ -->
+<div id="autofill-overlay"
+  class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+  <div class="modal-anim bg-background-light dark:bg-background-dark border border-primary/10 rounded-xl p-6 w-80 shadow-2xl">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="size-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-primary text-2xl">person_search</span>
+      </div>
+      <div>
+        <h3 class="font-bold text-base">Cliente encontrado!</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Comprou nos últimos 30 dias</p>
+      </div>
+    </div>
+    <div id="autofill-info" class="bg-primary/5 border border-primary/15 rounded-lg px-4 py-3 mb-5 flex flex-col gap-1">
+      <p id="autofill-name" class="font-bold text-sm text-slate-800 dark:text-slate-100"></p>
+      <p id="autofill-address" class="text-xs text-slate-500 dark:text-slate-400"></p>
+    </div>
+    <p class="text-sm text-center text-slate-500 dark:text-slate-400 mb-5">Deseja preencher nome e endereço automaticamente?</p>
+    <div class="flex gap-3">
+      <button onclick="closeAutofillModal()" class="flex-1 py-2.5 rounded-lg border border-primary/20 bg-primary/5 font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-primary/10 transition-colors">
+        Não
+      </button>
+      <button onclick="confirmAutofill()" class="flex-1 py-2.5 rounded-lg bg-primary text-background-dark font-bold text-sm hover:opacity-90 transition-opacity">
+        Sim, preencher
+      </button>
+    </div>
+  </div>
+</div>
   
 </div><!-- end #dashboard -->
 
@@ -881,7 +959,154 @@ function toggleTheme() {
     label.textContent = useDark ? 'Modo Claro'  : 'Modo Escuro';
   });
 })();
-  
+
+// ─── HISTÓRICO DE CLIENTES ────────────────────────────────────────────────────
+const CLIENTS_COLLECTION = 'clientes';
+let allClients = []; // cache para filtro local
+let autofillCandidate = null; // cliente a ser autopreenchido
+let phoneCheckTimer = null; // debounce
+
+// Salva ou atualiza o cliente no Firestore
+function saveClientToHistory(name, phone, address) {
+  if (!phone) return;
+  const docId = phone.replace(/\D/g, '');
+  if (!docId) return;
+  db.collection(CLIENTS_COLLECTION).doc(docId).set({
+    name, phone, address,
+    lastOrder: Date.now()
+  }, { merge: true });
+}
+
+// Abre o modal e carrega os clientes dos últimos 30 dias
+function openClientHistory() {
+  const overlay = document.getElementById('client-history-overlay');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+  document.getElementById('client-search-input').value = '';
+  loadClientHistory();
+}
+
+function closeClientHistory() {
+  document.getElementById('client-history-overlay').classList.add('hidden');
+  document.getElementById('client-history-overlay').classList.remove('flex');
+}
+
+function handleClientHistoryOverlay(e) {
+  if (e.target === document.getElementById('client-history-overlay')) closeClientHistory();
+}
+
+function loadClientHistory() {
+  const list = document.getElementById('client-history-list');
+  list.innerHTML = `<div class="flex justify-center py-8"><span class="text-slate-400 text-sm">Carregando...</span></div>`;
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  db.collection(CLIENTS_COLLECTION)
+    .where('lastOrder', '>=', thirtyDaysAgo)
+    .orderBy('lastOrder', 'desc')
+    .get()
+    .then(snapshot => {
+      allClients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderClientHistory(allClients);
+    })
+    .catch(() => {
+      list.innerHTML = `<p class="text-center text-sm text-red-400 py-8">Erro ao carregar clientes.</p>`;
+    });
+}
+
+function renderClientHistory(clients) {
+  const list = document.getElementById('client-history-list');
+  list.innerHTML = '';
+  if (clients.length === 0) {
+    list.innerHTML = `
+      <div class="flex flex-col items-center justify-center gap-3 py-12 text-slate-400">
+        <span class="material-symbols-outlined text-5xl opacity-30">group_off</span>
+        <p class="text-sm">Nenhum cliente encontrado.</p>
+      </div>`;
+    return;
+  }
+  clients.forEach(c => {
+    const daysAgo = Math.floor((Date.now() - c.lastOrder) / (1000 * 60 * 60 * 24));
+    const daysLabel = daysAgo === 0 ? 'Hoje' : daysAgo === 1 ? 'Ontem' : `${daysAgo} dias atrás`;
+    const card = document.createElement('div');
+    card.className = 'card-anim flex items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 hover:border-primary/30 transition-all';
+    card.innerHTML = `
+      <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+        <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">person</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">${esc(c.name)}</p>
+        <p class="text-xs text-slate-500 dark:text-primary/50 truncate">${esc(c.phone || '—')}</p>
+        <p class="text-xs text-slate-400 dark:text-primary/30 truncate">${esc(c.address || '—')}</p>
+      </div>
+      <div class="flex flex-col items-end gap-2 shrink-0">
+        <span class="text-[10px] bg-slate-100 dark:bg-primary/10 text-slate-500 dark:text-primary/50 px-2 py-0.5 rounded-full font-medium">${daysLabel}</span>
+        <button onclick="prefillFromClient(${JSON.stringify(c).replace(/"/g, '&quot;')})"
+          title="Criar nova entrega para este cliente"
+          class="size-8 rounded-lg bg-primary/10 hover:bg-primary/25 flex items-center justify-center transition-colors group">
+          <span class="material-symbols-outlined text-primary text-base group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+        </button>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function filterClientHistory() {
+  const q = document.getElementById('client-search-input').value.toLowerCase();
+  if (!q) { renderClientHistory(allClients); return; }
+  const filtered = allClients.filter(c =>
+    (c.name || '').toLowerCase().includes(q) ||
+    (c.phone || '').replace(/\D/g,'').includes(q.replace(/\D/g,''))
+  );
+  renderClientHistory(filtered);
+}
+
+// Clica na setinha → fecha histórico, abre modal nova entrega com dados preenchidos
+function prefillFromClient(client) {
+  closeClientHistory();
+  openModal(); // abre e reseta o form
+  setTimeout(() => {
+    document.getElementById('f-name').value    = client.name    || '';
+    document.getElementById('f-phone').value   = client.phone   || '';
+    document.getElementById('f-address').value = client.address || '';
+  }, 50);
+}
+
+// ─── AUTOPREENCHIMENTO POR TELEFONE ──────────────────────────────────────────
+function checkPhoneInHistory(rawPhone) {
+  const digits = rawPhone.replace(/\D/g, '');
+  if (digits.length < 10) return; // ainda incompleto
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  db.collection(CLIENTS_COLLECTION).doc(digits)
+    .get()
+    .then(doc => {
+      if (!doc.exists) return;
+      const c = doc.data();
+      if (c.lastOrder >= thirtyDaysAgo) openAutofillModal(c);
+    });
+}
+
+function openAutofillModal(client) {
+  autofillCandidate = client;
+  document.getElementById('autofill-name').textContent    = client.name    || '';
+  document.getElementById('autofill-address').textContent = client.address || '';
+  const overlay = document.getElementById('autofill-overlay');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+}
+
+function closeAutofillModal() {
+  autofillCandidate = null;
+  document.getElementById('autofill-overlay').classList.add('hidden');
+  document.getElementById('autofill-overlay').classList.remove('flex');
+}
+
+function confirmAutofill() {
+  if (!autofillCandidate) return;
+  document.getElementById('f-name').value    = autofillCandidate.name    || '';
+  document.getElementById('f-address').value = autofillCandidate.address || '';
+  closeAutofillModal();
+  showToast(`Dados de ${autofillCandidate.name} preenchidos!`, '👤');
+}
+
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 function doLogin() {
   const user = document.getElementById('login-user').value.trim();
@@ -1681,7 +1906,15 @@ function maskPhone(el) {
   else if (v.length > 2) v = v.replace(/^(\d{2})(\d+)$/, '($1) $2');
   else if (v.length > 0) v = '(' + v;
   el.value = v;
+
+  // Detecta cliente ao completar número (10 ou 11 dígitos)
+  const digits = el.value.replace(/\D/g,'');
+  clearTimeout(phoneCheckTimer);
+  if (digits.length >= 10) {
+    phoneCheckTimer = setTimeout(() => checkPhoneInHistory(el.value), 400);
+  }
 }
+  
 function maskMoney(el) {
   let v = el.value.replace(/\D/g,'');
   if (!v) { el.value = ''; return; }
@@ -1714,6 +1947,7 @@ function submitDelivery() {
     // MODO CRIAÇÃO — cria novo documento
     const delivery = { id: genId(), status: 'pending', zone: selectedZone, name, phone, address, desc, value, paid, method: selectedMethod, createdAt: Date.now() };
     saveDelivery(delivery);
+    saveClientToHistory(name, phone, address);
     closeModal();
     showToast(`Entrega criada para ${name}!`, '✅');
   }
