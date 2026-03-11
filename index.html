@@ -999,16 +999,32 @@ function loadClientHistory() {
   const list = document.getElementById('client-history-list');
   list.innerHTML = `<div class="flex justify-center py-8"><span class="text-slate-400 text-sm">Carregando...</span></div>`;
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
   db.collection(CLIENTS_COLLECTION)
-    .where('lastOrder', '>=', thirtyDaysAgo)
     .orderBy('lastOrder', 'desc')
+    .limit(200)
     .get()
     .then(snapshot => {
-      allClients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const batch = db.batch(); // apaga os velhos em lote
+      let hasDeletes = false;
+
+      allClients = [];
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.lastOrder < thirtyDaysAgo) {
+          batch.delete(doc.ref); // marca para deletar
+          hasDeletes = true;
+        } else {
+          allClients.push({ id: doc.id, ...data });
+        }
+      });
+
+      if (hasDeletes) batch.commit(); // executa as deleções em segundo plano
       renderClientHistory(allClients);
     })
-    .catch(() => {
-      list.innerHTML = `<p class="text-center text-sm text-red-400 py-8">Erro ao carregar clientes.</p>`;
+    .catch(err => {
+      console.error('Erro clientes:', err);
+      list.innerHTML = `<p class="text-center text-sm text-red-400 py-8">Erro: ${err.message}</p>`;
     });
 }
 
