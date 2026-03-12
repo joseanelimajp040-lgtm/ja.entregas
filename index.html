@@ -446,6 +446,29 @@
         </div>
       </div>
 
+  <!-- ── AGENDAMENTO ── -->
+<div class="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/10">
+  <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-tight">Agendamento</span>
+  <label class="relative inline-flex items-center cursor-pointer gap-3">
+    <div class="relative">
+      <input id="f-schedule-toggle" type="checkbox" class="sr-only peer" onchange="onScheduleToggle()"/>
+      <div class="w-14 h-7 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-500"></div>
+    </div>
+    <span id="schedule-status" class="text-sm font-medium text-slate-400">Sem agendamento</span>
+  </label>
+</div>
+
+<!-- Chip aparece após horário confirmado -->
+<div id="schedule-chip" class="hidden items-center justify-between px-4 py-2.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+  <div class="flex items-center gap-2">
+    <span class="material-symbols-outlined text-blue-400 text-lg">schedule</span>
+    <span class="text-sm font-semibold text-blue-400">Agendado para: <span id="schedule-chip-time" class="font-black"></span></span>
+  </div>
+  <button onclick="clearSchedule()" class="text-blue-400/60 hover:text-blue-400 transition-colors ml-3">
+    <span class="material-symbols-outlined text-base">close</span>
+  </button>
+</div>
+      
       <!-- Forma de pagamento -->
       <div class="flex flex-col gap-3">
         <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Forma de Pagamento</label>
@@ -616,7 +639,55 @@
     </div>
   </div>
 </div>
-  
+
+<!-- ═══════════════════════ MODAL AGENDAMENTO ═══════════════════════ -->
+<div id="schedule-modal-overlay" onclick="handleScheduleOverlay(event)"
+  class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+  <div class="modal-anim bg-background-light dark:bg-background-dark border border-primary/10 rounded-xl p-6 w-80 shadow-2xl">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-blue-400 text-xl">schedule</span>
+        <h3 class="font-bold text-lg">Agendar Entrega</h3>
+      </div>
+      <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Display visual do relógio -->
+    <div class="flex flex-col items-center gap-4 mb-6">
+      <div class="relative size-36 flex items-center justify-center rounded-full bg-blue-500/10 border-2 border-blue-500/30 select-none">
+        <span class="material-symbols-outlined text-blue-400/20 absolute text-7xl">schedule</span>
+        <div id="schedule-clock-display" class="text-3xl font-black text-blue-400 tracking-tight z-10 tabular-nums">
+          --:--
+        </div>
+      </div>
+
+      <input id="schedule-time-input" type="time"
+        oninput="updateClockDisplay(this.value)"
+        class="w-full py-3 px-4 text-center text-2xl font-bold bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"/>
+
+      <p class="text-xs text-slate-400 dark:text-primary/40 text-center leading-relaxed">
+        A entrega ficará bloqueada até o horário selecionado.
+      </p>
+    </div>
+
+    <!-- Botões -->
+    <div class="flex gap-3">
+      <button onclick="closeScheduleModal()"
+        class="flex-1 py-2.5 rounded-lg border border-primary/20 bg-primary/5 font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-primary/10 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="confirmSchedule()"
+        class="flex-1 py-2.5 rounded-lg bg-blue-500 text-white font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all">
+        Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
 </div><!-- end #dashboard -->
 
 <!-- ═══════════════════════ TOAST (global) ═══════════════════════ -->
@@ -900,6 +971,22 @@
   selectZone(d.zone);
   selectMethod(d.method);
 
+  // Restaura agendamento se existir
+  selectedScheduledAt = d.scheduledAt || null;
+  if (selectedScheduledAt && selectedScheduledAt > Date.now()) {
+    const dt   = new Date(selectedScheduledAt);
+    const hh   = String(dt.getHours()).padStart(2,'0');
+    const mm   = String(dt.getMinutes()).padStart(2,'0');
+    const time = `${hh}:${mm}`;
+    document.getElementById('f-schedule-toggle').checked   = true;
+    document.getElementById('schedule-status').textContent = `Agendado ${time}`;
+    document.getElementById('schedule-status').className   = 'text-sm font-medium text-blue-400';
+    document.getElementById('schedule-chip-time').textContent = time;
+    const chip = document.getElementById('schedule-chip');
+    chip.classList.remove('hidden');
+    chip.classList.add('flex');
+  }
+
   // Muda o título e botão do modal para indicar edição
   document.querySelector('#modal h2').innerHTML =
     `<span class="material-symbols-outlined text-primary">edit</span> Editar Entrega`;
@@ -1121,6 +1208,117 @@ function confirmAutofill() {
   document.getElementById('f-address').value = autofillCandidate.address || '';
   closeAutofillModal();
   showToast(`Dados de ${autofillCandidate.name} preenchidos!`, '👤');
+}
+
+// ─── AGENDAMENTO ──────────────────────────────────────────────────────────────
+let selectedScheduledAt = null;   // timestamp ms ou null
+let countdownInterval   = null;   // intervalo global da contagem
+
+function onScheduleToggle() {
+  const checked = document.getElementById('f-schedule-toggle').checked;
+  if (checked) {
+    openScheduleModal();
+  } else {
+    clearSchedule();
+  }
+}
+
+function openScheduleModal() {
+  const overlay = document.getElementById('schedule-modal-overlay');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+  // Padrão: +30 minutos a partir de agora
+  const now = new Date(Date.now() + 30 * 60 * 1000);
+  const hh  = String(now.getHours()).padStart(2, '0');
+  const mm  = String(now.getMinutes()).padStart(2, '0');
+  const def = `${hh}:${mm}`;
+  document.getElementById('schedule-time-input').value = def;
+  updateClockDisplay(def);
+}
+
+function closeScheduleModal() {
+  document.getElementById('schedule-modal-overlay').classList.add('hidden');
+  document.getElementById('schedule-modal-overlay').classList.remove('flex');
+  // Se o usuário fechou sem confirmar, desmarca o toggle
+  if (!selectedScheduledAt) {
+    document.getElementById('f-schedule-toggle').checked = false;
+    document.getElementById('schedule-status').textContent  = 'Sem agendamento';
+    document.getElementById('schedule-status').className    = 'text-sm font-medium text-slate-400';
+  }
+}
+
+function handleScheduleOverlay(e) {
+  if (e.target === document.getElementById('schedule-modal-overlay')) closeScheduleModal();
+}
+
+function updateClockDisplay(val) {
+  document.getElementById('schedule-clock-display').textContent = val || '--:--';
+}
+
+function confirmSchedule() {
+  const timeVal = document.getElementById('schedule-time-input').value;
+  if (!timeVal) { showToast('Selecione um horário!', '⚠️'); return; }
+
+  const [hh, mm] = timeVal.split(':').map(Number);
+  const now = new Date();
+  const scheduled = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
+
+  if (scheduled.getTime() <= Date.now()) {
+    showToast('Selecione um horário futuro!', '⚠️');
+    return;
+  }
+
+  selectedScheduledAt = scheduled.getTime();
+
+  // Exibe chip com horário
+  const chip = document.getElementById('schedule-chip');
+  chip.classList.remove('hidden');
+  chip.classList.add('flex');
+  document.getElementById('schedule-chip-time').textContent = timeVal;
+  document.getElementById('schedule-status').textContent    = `Agendado ${timeVal}`;
+  document.getElementById('schedule-status').className      = 'text-sm font-medium text-blue-400';
+
+  document.getElementById('schedule-modal-overlay').classList.add('hidden');
+  document.getElementById('schedule-modal-overlay').classList.remove('flex');
+  showToast(`Entrega agendada para ${timeVal}`, '🕐');
+}
+
+function clearSchedule() {
+  selectedScheduledAt = null;
+  document.getElementById('f-schedule-toggle').checked    = false;
+  document.getElementById('schedule-status').textContent  = 'Sem agendamento';
+  document.getElementById('schedule-status').className    = 'text-sm font-medium text-slate-400';
+  const chip = document.getElementById('schedule-chip');
+  chip.classList.add('hidden');
+  chip.classList.remove('flex');
+}
+
+// ─── LOOP DE CONTAGEM REGRESSIVA ──────────────────────────────────────────────
+function startCountdownLoop() {
+  if (countdownInterval) return; // já está rodando
+  countdownInterval = setInterval(() => {
+    document.querySelectorAll('[data-scheduled-at]').forEach(card => {
+      const scheduledAt = parseInt(card.dataset.scheduledAt, 10);
+      const remaining   = scheduledAt - Date.now();
+      const cdEl        = card.querySelector('.schedule-countdown');
+      if (!cdEl) return;
+
+      if (remaining <= 0) {
+        // Hora chegou — desbloqueia no Firestore (o listener vai atualizar a tela)
+        const id = card.dataset.id;
+        if (id) db.collection(COLLECTION).doc(id).update({ scheduledAt: null })
+                   .catch(err => console.warn('[countdown unlock]', err));
+      } else {
+        const total = Math.floor(remaining / 1000);
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        cdEl.textContent = h > 0
+          ? `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`
+          : `${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+      }
+    });
+  }, 1000);
 }
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
@@ -1611,7 +1809,10 @@ function startRealtimeSync() {
     .onSnapshot(snapshot => {
       deliveries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       // Atualiza a tela que estiver visível
-      if (!document.getElementById('dashboard').classList.contains('hidden')) renderAll();
+      if (!document.getElementById('dashboard').classList.contains('hidden')) {
+        renderAll();
+        startCountdownLoop(); // ← ADICIONE
+      }
       if (!document.getElementById('deliverer-screen').classList.contains('hidden')) renderDeliverer();
     }, err => {
       console.error('Firestore error:', err);
@@ -1726,11 +1927,32 @@ function buildCard(d) {
   // Status-specific card styling
   let cardClass, actionButtons;
   if (d.status === 'pending') {
-    cardClass = 'bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-5 shadow-sm hover:shadow-md transition-all cursor-grab card-anim';
-    actionButtons = `
-      <button onclick="moveCard('${d.id}','route')" class="w-full py-2.5 rounded-xl border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-background-dark transition-all flex items-center justify-center gap-2">
-        Iniciar Rota <span class="material-symbols-outlined text-lg">local_shipping</span>
-      </button>`;
+    const isBlocked = d.scheduledAt && d.scheduledAt > Date.now();
+    if (isBlocked) {
+      cardClass = 'bg-white dark:bg-primary/5 border border-blue-500/30 rounded-xl p-5 shadow-sm transition-all card-anim';
+      el.draggable = false;
+      el.dataset.scheduledAt = d.scheduledAt;
+      actionButtons = `
+        <div class="flex flex-col gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-400 text-base" style="animation:pulse 1.5s infinite">schedule</span>
+            <span class="text-xs font-bold text-blue-400 uppercase tracking-wide">Entrega Agendada — Bloqueada</span>
+          </div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="text-xs text-blue-400/60">Libera em:</span>
+            <span class="schedule-countdown text-sm font-black text-blue-400 font-mono tabular-nums">calculando...</span>
+          </div>
+          <p class="text-[10px] text-blue-400/50 mt-1 leading-relaxed">
+            Esta entrega será liberada automaticamente ao chegar no horário agendado.
+          </p>
+        </div>`;
+    } else {
+      cardClass = 'bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl p-5 shadow-sm hover:shadow-md transition-all cursor-grab card-anim';
+      actionButtons = `
+        <button onclick="moveCard('${d.id}','route')" class="w-full py-2.5 rounded-xl border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-background-dark transition-all flex items-center justify-center gap-2">
+          Iniciar Rota <span class="material-symbols-outlined text-lg">local_shipping</span>
+        </button>`;
+    }
   } else if (d.status === 'route') {
     cardClass = 'bg-primary/10 border-2 border-primary/30 rounded-xl p-5 shadow-lg relative overflow-hidden cursor-grab card-anim';
     actionButtons = `
@@ -1877,6 +2099,7 @@ function resetForm() {
   ['f-name','f-phone','f-address','f-desc','f-value'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-paid').checked = false;
   updatePaidLabel();
+  clearSchedule(); // ← ADICIONE ESTA LINHA
 }
 
 function selectZone(z) {
@@ -1955,13 +2178,13 @@ function submitDelivery() {
 
  if (editingId) {
     // MODO EDIÇÃO — atualiza no Firebase
-    const fields = { zone: selectedZone, name, phone, address, desc, value, paid, method: selectedMethod };
+    const fields = { zone: selectedZone, name, phone, address, desc, value, paid, method: selectedMethod, scheduledAt: selectedScheduledAt || null };
     updateDelivery(editingId, fields);
     closeModal();
     showToast(`Entrega de ${name} atualizada!`, '✏️');
   } else {
     // MODO CRIAÇÃO — cria novo documento
-    const delivery = { id: genId(), status: 'pending', zone: selectedZone, name, phone, address, desc, value, paid, method: selectedMethod, createdAt: Date.now() };
+    const delivery = { id: genId(), status: 'pending', zone: selectedZone, name, phone, address, desc, value, paid, method: selectedMethod, scheduledAt: selectedScheduledAt || null, createdAt: Date.now() };
     saveDelivery(delivery);
     saveClientToHistory(name, phone, address);
     closeModal();
