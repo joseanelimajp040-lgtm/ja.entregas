@@ -1060,11 +1060,9 @@ function openLockedDeliveryPreview(id) {
 
   const isLocked = d.scheduledAt && d.scheduledAt > Date.now();
 
-  // Cabeçalho e título
   document.getElementById('ldp-name').textContent = d.name;
   document.getElementById('ldp-desc').textContent = d.desc || '—';
 
-  // Seção de countdown — só aparece se for agendada e ainda bloqueada
   const countdownSection = document.getElementById('ldp-countdown-section');
   if (isLocked) {
     const scheduledTime = new Date(d.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -1089,7 +1087,6 @@ function openLockedDeliveryPreview(id) {
     countdownSection.classList.add('hidden');
   }
 
-  // Pagamento
   const paidWrap = document.getElementById('ldp-paid-wrap');
   const paidIcon = document.getElementById('ldp-paid-icon');
   const paidLbl  = document.getElementById('ldp-paid-label');
@@ -1109,27 +1106,28 @@ function openLockedDeliveryPreview(id) {
 
   const overlay = document.getElementById('locked-delivery-overlay');
   const popup   = document.getElementById('locked-delivery-popup');
-   popup.style.transition = 'none';
-  popup.style.transform  = 'translateY(100%)';
 
+  // Mostra overlay, popup já está em translateY(100%) pelo closeLockedDeliveryPreview
   overlay.classList.remove('hidden');
   overlay.classList.add('flex');
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      popup.style.transition = 'transform 0.3s cubic-bezier(.32,.72,0,1)';
-      popup.style.transform  = 'translateY(0)';
-    });
-  });
+  // Pequeno delay garante que o browser registrou o display antes de animar
+  setTimeout(() => {
+    popup.style.transform = 'translateY(0)';
+  }, 20);
 }
 
 function closeLockedDeliveryPreview() {
   const overlay = document.getElementById('locked-delivery-overlay');
   const popup   = document.getElementById('locked-delivery-popup');
+
   popup.style.transform = 'translateY(100%)';
+
   setTimeout(() => {
     overlay.classList.add('hidden');
     overlay.classList.remove('flex');
+    // Garante que o popup sempre começa em baixo para a próxima abertura
+    popup.style.transform = 'translateY(100%)';
   }, 300);
 }
   
