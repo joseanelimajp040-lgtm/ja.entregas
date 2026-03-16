@@ -1109,10 +1109,17 @@ function openLockedDeliveryPreview(id) {
 
   const overlay = document.getElementById('locked-delivery-overlay');
   const popup   = document.getElementById('locked-delivery-popup');
+   popup.style.transition = 'none';
+  popup.style.transform  = 'translateY(100%)';
+
   overlay.classList.remove('hidden');
   overlay.classList.add('flex');
+
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => { popup.style.transform = 'translateY(0)'; });
+    requestAnimationFrame(() => {
+      popup.style.transition = 'transform 0.3s cubic-bezier(.32,.72,0,1)';
+      popup.style.transform  = 'translateY(0)';
+    });
   });
 }
 
