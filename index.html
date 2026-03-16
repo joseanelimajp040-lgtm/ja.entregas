@@ -997,25 +997,26 @@
     class="w-full bg-background-light dark:bg-background-dark rounded-t-2xl border-t border-x border-primary/15 shadow-2xl p-5 flex flex-col gap-4"
     style="transform:translateY(100%); transition:transform 0.3s cubic-bezier(.32,.72,0,1)">
 
-    <!-- Handle -->
     <div class="flex justify-center -mt-1 mb-1">
       <div class="w-10 h-1 rounded-full bg-slate-300 dark:bg-primary/20"></div>
     </div>
 
-    <!-- Cabeçalho -->
+    <!-- Cabeçalho dinâmico -->
     <div class="flex items-center gap-3">
-      <div class="size-11 rounded-full bg-orange-500/15 flex items-center justify-center shrink-0 border border-orange-400/25">
-        <span class="material-symbols-outlined text-orange-500 text-2xl">lock_clock</span>
+      <div id="ldp-header-wrap" class="size-11 rounded-full bg-orange-500/15 flex items-center justify-center shrink-0 border border-orange-400/25">
+        <span id="ldp-header-icon" class="material-symbols-outlined text-orange-500 text-2xl">lock_clock</span>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-bold uppercase tracking-wider text-orange-500 mb-0.5">Entrega Agendada</p>
+        <p id="ldp-title-label" class="text-xs font-bold uppercase tracking-wider text-orange-500 mb-0.5">Entrega Agendada</p>
         <h3 id="ldp-name" class="font-bold text-lg text-slate-800 dark:text-slate-100 truncate"></h3>
-        <p class="text-xs text-slate-500 dark:text-primary/50">Liberação: <span id="ldp-time" class="font-semibold text-orange-500"></span></p>
+        <p id="ldp-header-label" class="text-xs text-slate-500 dark:text-primary/50">
+          Liberação: <span id="ldp-time" class="font-semibold text-orange-500"></span>
+        </p>
       </div>
     </div>
 
-    <!-- Countdown -->
-    <div class="flex items-center justify-between px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-400/20">
+    <!-- Countdown (oculto para não-agendadas) -->
+    <div id="ldp-countdown-section" class="flex items-center justify-between px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-400/20">
       <div class="flex items-center gap-2">
         <span class="material-symbols-outlined text-orange-500 text-lg">hourglass_top</span>
         <span class="text-sm font-semibold text-orange-500">Tempo restante</span>
@@ -1032,7 +1033,7 @@
       </div>
     </div>
 
-    <!-- Produtos -->
+    <!-- Pedido -->
     <div class="rounded-xl bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10 overflow-hidden">
       <div class="flex items-center gap-2.5 px-4 py-3 border-b border-slate-200 dark:border-primary/10">
         <span class="material-symbols-outlined text-primary text-lg">shopping_bag</span>
@@ -1057,18 +1058,38 @@ function openLockedDeliveryPreview(id) {
   const d = deliveries.find(x => x.id === id);
   if (!d) return;
 
-  const scheduledTime = new Date(d.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const scheduledDate = new Date(d.scheduledAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  const now = new Date();
-  const isToday = new Date(d.scheduledAt).getDate() === now.getDate();
-  const dateLabel = isToday ? `hoje às ${scheduledTime}` : `${scheduledDate} às ${scheduledTime}`;
+  const isLocked = d.scheduledAt && d.scheduledAt > Date.now();
 
+  // Cabeçalho e título
   document.getElementById('ldp-name').textContent = d.name;
-  document.getElementById('ldp-time').textContent = dateLabel;
   document.getElementById('ldp-desc').textContent = d.desc || '—';
-  document.getElementById('ldp-countdown').dataset.countdown = d.scheduledAt;
 
-  // Status de pagamento
+  // Seção de countdown — só aparece se for agendada e ainda bloqueada
+  const countdownSection = document.getElementById('ldp-countdown-section');
+  if (isLocked) {
+    const scheduledTime = new Date(d.scheduledAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const scheduledDate = new Date(d.scheduledAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const now = new Date();
+    const isToday = new Date(d.scheduledAt).getDate() === now.getDate();
+    const dateLabel = isToday ? `hoje às ${scheduledTime}` : `${scheduledDate} às ${scheduledTime}`;
+    document.getElementById('ldp-time').textContent = dateLabel;
+    document.getElementById('ldp-countdown').dataset.countdown = d.scheduledAt;
+    document.getElementById('ldp-header-label').textContent = 'Entrega Agendada';
+    document.getElementById('ldp-header-icon').textContent = 'lock_clock';
+    document.getElementById('ldp-header-icon').className = 'material-symbols-outlined text-orange-500 text-2xl';
+    document.getElementById('ldp-header-wrap').className = 'size-11 rounded-full bg-orange-500/15 flex items-center justify-center shrink-0 border border-orange-400/25';
+    document.getElementById('ldp-title-label').className = 'text-xs font-bold uppercase tracking-wider text-orange-500 mb-0.5';
+    countdownSection.classList.remove('hidden');
+  } else {
+    document.getElementById('ldp-header-label').textContent = 'Aguardando Rota';
+    document.getElementById('ldp-header-icon').textContent = 'inventory_2';
+    document.getElementById('ldp-header-icon').className = 'material-symbols-outlined text-primary text-2xl';
+    document.getElementById('ldp-header-wrap').className = 'size-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0 border border-primary/25';
+    document.getElementById('ldp-title-label').className = 'text-xs font-bold uppercase tracking-wider text-primary mb-0.5';
+    countdownSection.classList.add('hidden');
+  }
+
+  // Pagamento
   const paidWrap = document.getElementById('ldp-paid-wrap');
   const paidIcon = document.getElementById('ldp-paid-icon');
   const paidLbl  = document.getElementById('ldp-paid-label');
@@ -1619,11 +1640,15 @@ function attachLongPress(el, id) {
   };
 
   const tap = (e) => {
-    if (isLongPress) return; // block click after long press
+    if (isLongPress) return;
     const delivery = deliveries.find(x => x.id === id);
-    if (!delivery || delivery.status === 'pending') return; // bloqueia pendentes
+    if (!delivery) return;
+    if (delivery.status === 'pending') {
+        openLockedDeliveryPreview(id); // abre preview para pendentes também
+        return;
+    }
     openDelivererModal(id);
-  };
+};
 
   el.addEventListener('mousedown',   start);
   el.addEventListener('touchstart',  start,  { passive: true });
