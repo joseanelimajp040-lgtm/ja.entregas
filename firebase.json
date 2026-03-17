@@ -1,0 +1,32 @@
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**"
+    ]
+  }
+}
+```
+
+---
+
+### Como vai funcionar
+```
+Você edita functions/index.js no GitHub
+           ↓
+Faz commit/push no branch main
+           ↓
+GitHub Actions detecta mudança na pasta functions/
+           ↓
+Instala Firebase CLI + dependências automaticamente
+           ↓
+Faz deploy direto no Firebase
+           ↓
+✅ Função rodando — sem precisar do terminal local
