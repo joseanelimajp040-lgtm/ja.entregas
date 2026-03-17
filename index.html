@@ -14,6 +14,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -1417,6 +1418,7 @@ function doLogin() {
   document.getElementById('deliverer-name').textContent = user;
   document.getElementById('deliverer-screen').classList.remove('hidden');
   startGPSTracking(user);
+  registerDelivererForNotifications(user);
   startCountdownTimer();
     } else {
       document.getElementById('dashboard').classList.remove('hidden');
@@ -1858,6 +1860,68 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+// ═══════════════════════════════════════════════
+// FCM — REGISTRO DO TOKEN DO ENTREGADOR
+// ═══════════════════════════════════════════════
+
+// ⚠️ Substitua pela sua chave VAPID gerada no Passo 1
+const VAPID_KEY = 'COLE_AQUI_SUA_CHAVE_VAPID';
+
+const fcmMessaging = firebase.messaging();
+
+// Recebe notificação com o app ABERTO (em foreground)
+fcmMessaging.onMessage(function (payload) {
+  const { title, body } = payload.notification || {};
+  const data = payload.data || {};
+
+  // Toast visual dentro do app
+  showToast(body || title || 'Nova entrega chegou!', '📦');
+
+  // Notificação do sistema mesmo com app aberto
+  if (Notification.permission === 'granted') {
+    new Notification(title || '📦 Nova Entrega — J.A Pet Shop', {
+      body:  body || '',
+      icon:  '/icon-192.png',
+      badge: '/icon-192.png',
+      tag:   data.deliveryId || 'nova-entrega',
+      renotify: true
+    });
+  }
+});
+
+// Solicita permissão e salva o token no Firestore
+async function registerDelivererForNotifications(userName) {
+  try {
+    // Pede permissão ao usuário
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      showToast('Ative as notificações para receber alertas de entregas!', '🔔');
+      return;
+    }
+
+    // Obtém o token FCM único deste dispositivo/navegador
+    const token = await fcmMessaging.getToken({ vapidKey: VAPID_KEY });
+
+    if (!token) {
+      console.warn('[FCM] Token não gerado. Verifique a chave VAPID.');
+      return;
+    }
+
+    // Salva o token na coleção 'fcm_tokens' no Firestore
+    await db.collection('fcm_tokens').doc(token).set({
+      token,
+      userName,
+      role:       'entregador',
+      registeredAt: Date.now()
+    });
+
+    console.log('[FCM] Token registrado:', token);
+    showToast('Notificações ativadas! ✅', '🔔');
+
+  } catch (err) {
+    console.error('[FCM] Erro ao registrar token:', err);
+  }
+}
 const COLLECTION = 'entregas';
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
