@@ -2967,5 +2967,85 @@ function stopGPSTracking() {
     });
   }
 </script>
+<!-- ═══ GPS KEEP-ALIVE ═══════════════════════════════════════════════════════ -->
+<script>
+// ── Wake Lock: impede a tela de apagar enquanto o app estiver aberto ──────────
+let wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    console.log('[WakeLock] Ativo');
+  } catch (err) {
+    console.warn('[WakeLock] Falhou:', err.message);
+  }
+}
+
+// Reativa o Wake Lock quando a aba volta ao foco
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    await requestWakeLock();
+    // Religa o GPS se o motoboy estava logado e o rastreamento parou
+    const delivererScreen = document.getElementById('deliverer-screen');
+    const delivererName   = document.getElementById('deliverer-name')?.textContent;
+    if (!delivererScreen.classList.contains('hidden') && delivererName && gpsWatchId === null) {
+      console.log('[GPS] Tela voltou ao foco — religando rastreamento...');
+      startGPSTracking(delivererName);
+    }
+  }
+});
+
+// ── Áudio silencioso em loop (mantém o browser ativo no Android) ──────────────
+function startSilentAudio() {
+  // 1 segundo de silêncio em base64 (WAV PCM 8-bit mono 8000Hz)
+  const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+  const audio = new Audio(SILENT_WAV);
+  audio.loop    = true;
+  audio.volume  = 0.001; // praticamente inaudível
+  audio.play().catch(() => {
+    // Autoplay bloqueado — tenta de novo na primeira interação do usuário
+    document.addEventListener('touchstart', () => audio.play().catch(() => {}), { once: true });
+    document.addEventListener('click',      () => audio.play().catch(() => {}), { once: true });
+  });
+  return audio;
+}
+
+// ── Intercepta startGPSTracking para injetar as proteções ─────────────────────
+const _originalStartGPS = startGPSTracking;
+let   _silentAudio      = null;
+
+startGPSTracking = function(nome) {
+  // 1. Ativa Wake Lock
+  requestWakeLock();
+
+  // 2. Inicia áudio silencioso (só uma vez)
+  if (!_silentAudio) {
+    _silentAudio = startSilentAudio();
+  }
+
+  // 3. Chama a função original de rastreamento
+  _originalStartGPS(nome);
+
+  // 4. Registra o Service Worker para keep-alive via mensagens
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type:  'START_GPS_KEEPALIVE',
+      nome:  nome
+    });
+  }
+};
+
+// ── Intercepta stopGPSTracking para limpar os recursos ────────────────────────
+const _originalStopGPS = stopGPSTracking;
+stopGPSTracking = function() {
+  if (_silentAudio) { _silentAudio.pause(); _silentAudio = null; }
+  if (wakeLock)     { wakeLock.release().catch(() => {}); wakeLock = null; }
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'STOP_GPS_KEEPALIVE' });
+  }
+  _originalStopGPS();
+};
+</script>
 </body>
 </html>
