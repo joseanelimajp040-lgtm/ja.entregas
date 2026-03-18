@@ -21,5 +21,9 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+    {
+  "display": "standalone",
+  "background_color": "#231b0f"
+    }
   ]
 }
