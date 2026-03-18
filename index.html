@@ -3047,5 +3047,20 @@ stopGPSTracking = function() {
   _originalStopGPS();
 };
 </script>
+<script>
+// Recebe o ping do Service Worker e reinicia o GPS se necessário
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'GPS_KEEPALIVE_PING') {
+      const delivererScreen = document.getElementById('deliverer-screen');
+      const delivererName   = document.getElementById('deliverer-name')?.textContent;
+      if (!delivererScreen.classList.contains('hidden') && delivererName && gpsWatchId === null) {
+        console.log('[GPS] Keep-alive ping — reiniciando watchPosition...');
+        startGPSTracking(delivererName);
+      }
+    }
+  });
+}
+</script>
 </body>
 </html>
