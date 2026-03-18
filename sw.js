@@ -143,4 +143,29 @@ self.addEventListener('notificationclick', function (event) {
       return clients.openWindow('/');
     })
   );
+// ── GPS KEEP-ALIVE via mensagens da página ────────────────────────────────────
+let keepAliveInterval = null;
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'START_GPS_KEEPALIVE') {
+    const nome = event.data.nome;
+    if (keepAliveInterval) clearInterval(keepAliveInterval);
+
+    keepAliveInterval = setInterval(async () => {
+      const allClients = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true
+      });
+      allClients.forEach(client => {
+        client.postMessage({ type: 'GPS_KEEPALIVE_PING', nome });
+      });
+    }, 25000); // pinga a cada 25 segundos
+  }
+
+  if (event.data?.type === 'STOP_GPS_KEEPALIVE') {
+    if (keepAliveInterval) {
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
+  }
 });
