@@ -332,6 +332,12 @@
         </div>
         <span id="cnt-done" class="bg-green-500/10 text-green-500 text-xs font-bold px-2.5 py-1 rounded-full border border-green-500/20">0</span>
       </div>
+      <button onclick="clearDoneDeliveries()"
+  id="btn-clear-done"
+  class="hidden items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-bold border border-red-400/20 hover:bg-red-500/20 transition-all">
+  <span class="material-symbols-outlined text-sm">delete_sweep</span>
+  Limpar
+</button>
       <div id="col-done" data-status="done"
         ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave(event)"
         class="flex flex-col gap-4 min-h-64 rounded-xl p-1 transition-all">
@@ -527,6 +533,17 @@
     </div>
   </div>
 </div>
+
+function clearDoneDeliveries() {
+  const done = deliveries.filter(d => d.status === 'done');
+  if (done.length === 0) return;
+  if (!confirm(`Remover ${done.length} entrega(s) concluída(s)? Esta ação não pode ser desfeita.`)) return;
+  const batch = db.batch();
+  done.forEach(d => batch.delete(db.collection(COLLECTION).doc(d.id)));
+  batch.commit()
+    .then(() => showToast(`${done.length} entrega(s) removida(s)!`, '🗑️'))
+    .catch(err => showToast('Erro ao limpar: ' + err.message, '⚠️'));
+}
 
 <!-- ═══════════════════════ MODAL MAPA MOTOBOY ═══════════════════════ -->
 <div id="mapa-overlay" onclick="handleMapaOverlay(event)"
@@ -2045,8 +2062,13 @@ function renderAll() {
   document.getElementById('st-pending').textContent = cols.pending.length;
   document.getElementById('st-route').textContent   = cols.route.length;
   document.getElementById('st-done').textContent    = cols.done.length;
+  const btnClear = document.getElementById('btn-clear-done');
+if (btnClear) {
+  btnClear.classList.toggle('hidden', cols.done.length === 0);
+  btnClear.classList.toggle('flex',   cols.done.length > 0);
 }
 
+  
 function emptyState(status) {
   const data = {
     pending: { icon: 'inventory_2', text: 'Nenhuma entrega pendente' },
